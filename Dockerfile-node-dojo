@@ -1,0 +1,9 @@
+FROM kudulab/node-dojo:0.1.0
+
+RUN apk update &&\
+	apk add --no-cache mysql-client make
+
+# Install Newman for API testing
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm ci

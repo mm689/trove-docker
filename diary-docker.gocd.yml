@@ -1,0 +1,87 @@
+format_version: 5
+pipelines:
+  diary-docker:
+    group: diary
+    label_template: "${git[:8]}"
+    materials:
+      git:
+        type: configrepo
+    environment_variables:
+      AWS_ACCESS_KEY_ID: AKIA5G2AKNTSNENMAU6Z
+    secure_variables:
+      AWS_SECRET_ACCESS_KEY: "AES:g59K4IT1d4/zNeXfMNl1Pg==:dTJgdXqmIkHzL07B5Dq3hN/E5k7m9uPNlRV+jLPLHm1TPLxav9yUre26PBiEF/xo"
+    stages:
+      - build-base:
+          clean_workspace: true
+          jobs:
+            r:
+              artifacts:
+                - build:
+                    source: docker-r-base.image.txt
+              tasks:
+               - exec:
+                   command: make
+                   arguments:
+                    - "push-docker-r-base"
+      - build-dojo:
+          clean_workspace: true
+          jobs:
+            r:
+              fetch:
+                  stage: build-base
+                  job: r
+                  source: docker-r-base.image.txt
+                  is_file: true
+              artifacts:
+                - build:
+                    source: docker-r-dojo.image.txt
+              tasks:
+               - exec:
+                   command: make
+                   arguments:
+                    - "push-docker-r-dojo"
+            node:
+              artifacts:
+                - build:
+                    source: docker-node-dojo.image.txt
+              tasks:
+               - exec:
+                   command: make
+                   arguments:
+                    - "push-docker-node-dojo"
+      - test:
+          clean_workspace: true
+          jobs:
+            node-dojo:
+              tasks:
+               - fetch:
+                  stage: build-dojo
+                  job: node
+                  source: docker-node-dojo.image.txt
+                  is_file: true
+               - exec:
+                   command: make
+                   arguments:
+                    - "test-docker-node-dojo"
+            r-base:
+              tasks:
+               - fetch:
+                  stage: build-base
+                  job: r
+                  source: docker-r-base.image.txt
+                  is_file: true
+               - exec:
+                   command: make
+                   arguments:
+                    - "test-docker-r-base"
+            r-dojo:
+              tasks:
+               - fetch:
+                  stage: build-dojo
+                  job: r
+                  source: docker-r-dojo.image.txt
+                  is_file: true
+               - exec:
+                   command: make
+                   arguments:
+                    - "test-docker-r-dojo"
