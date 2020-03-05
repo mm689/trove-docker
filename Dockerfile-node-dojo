@@ -6,4 +6,4 @@ RUN apk update &&\
 # Install Newman for API testing
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm ci
+RUN yarn install --frozen-lockfile
