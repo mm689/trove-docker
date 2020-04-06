@@ -31,7 +31,7 @@ push-docker-r-dojo docker-push-r-dojo: push-docker-r-dojo
 
 docker-build-% build-docker-% docker-%.image.txt: Dockerfile-%
 	IMAGE_NAME="907983613156.dkr.ecr.eu-west-1.amazonaws.com/diary-$*:$(shell git rev-parse HEAD)" &&\
-	docker build -f Dockerfile-$* -t $$IMAGE_NAME . &&\
+	docker build -f Dockerfile-$* -t $$IMAGE_NAME --build-arg TAG=$(shell git rev-parse HEAD) . &&\
 	echo "$$IMAGE_NAME" >docker-$*.image.txt
 
 # Copy package rules from diary/, assuming that's in a sibling directory.
