@@ -35,6 +35,8 @@ docker-build-% build-docker-% docker-%.image.txt: Dockerfile-%
 	echo "$$IMAGE_NAME" >docker-$*.image.txt
 
 # Copy package rules from diary/, assuming that's in a sibling directory.
+package-list.js: ../diary/package-list.js
+	cp -p $< .
 package-list.r: ../diary/package-list.r
 	cat $< | grep -Ev '^(#|$$)' >$@
 
