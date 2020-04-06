@@ -22,10 +22,21 @@ test-docker-node-dojo: docker-node-dojo.image.txt
 
 # UTILITY RULES
 
-build-docker-% docker-%.image.txt:
+build-docker-node-dojo docker-build-node-dojo: docker-build-node-dojo
+build-docker-r-base docker-build-r-base: docker-build-r-base
+build-docker-r-dojo docker-build-r-dojo: docker-build-r-dojo
+push-docker-node-dojo docker-push-node-dojo: push-docker-node-dojo
+push-docker-r-base docker-push-r-base: push-docker-r-base
+push-docker-r-dojo docker-push-r-dojo: push-docker-r-dojo
+
+docker-build-% build-docker-% docker-%.image.txt: Dockerfile-%
 	IMAGE_NAME="907983613156.dkr.ecr.eu-west-1.amazonaws.com/diary-$*:$(shell git rev-parse HEAD)" &&\
 	docker build -f Dockerfile-$* -t $$IMAGE_NAME . &&\
 	echo "$$IMAGE_NAME" >docker-$*.image.txt
+
+# Copy package rules from diary/, assuming that's in a sibling directory.
+package-list.r: ../diary/package-list.r
+	cat $< | grep -Ev '^(#|$$)' >$@
 
 push-docker-%: docker-%.image.txt login-aws
 	$(MAKE) build-docker-$*
