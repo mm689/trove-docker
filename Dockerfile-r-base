@@ -1,4 +1,4 @@
-FROM r-base:3.6.1
+FROM r-base:3.6.3
 
 ENV TINI_VERSION v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
@@ -8,6 +8,7 @@ RUN apt-get update &&\
 	apt-get install -y ssh-client \
 		libcurl4-openssl-dev libxml2-dev \
 		libmariadbclient-dev libssl-dev \
+		libcairo2-dev \
 		mysql-client make netcat && \
 	apt-get clean
 
