@@ -85,3 +85,17 @@ pipelines:
                    command: make
                    arguments:
                     - "test-docker-r-dojo"
+      - save:
+          clean_workspace: true
+          environment_variables:
+            GIT_AUTHOR_NAME: GoCD pipeline
+            GIT_AUTHOR_EMAIL: diary@gocd.martinmccaffery.com
+            GIT_COMMITTER_NAME: GoCD pipeline
+            GIT_COMMITTER_EMAIL: diary@gocd.martinmccaffery.com
+          jobs:
+            update-diary:
+              tasks:
+               - exec:
+                   command: make
+                   arguments:
+                    - "gocd-dependencies-push-update"
