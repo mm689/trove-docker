@@ -1,4 +1,4 @@
-@auth0/auth0-spa-js@^1.5.0
+@auth0/auth0-spa-js@^1.6.5
 @babel/core@^7.9.0
 @babel/preset-env@^7.9.0
 @babel/preset-typescript@^7.9.0
@@ -9,6 +9,7 @@
 @types/node@^13.9.2
 @typescript-eslint/eslint-plugin@^2.24.0
 @typescript-eslint/parser@^2.24.0
+aws-sdk@^2.654.0
 cors@^2.8.5
 eslint-config-standard@^14.1.0
 eslint-config-standard@^14.1.1
@@ -24,6 +25,7 @@ eslint@^6.8.0
 express-jwt-authz@^2.3.1
 express-jwt@^5.3.1
 express@^4.17.1
+http-status-codes@^1.4.0
 jwks-rsa@^1.7.0
 morgan@^1.10.0
 mysql@^2.18.1
