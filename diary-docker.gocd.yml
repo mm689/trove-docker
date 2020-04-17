@@ -99,3 +99,25 @@ pipelines:
                    command: make
                    arguments:
                     - "gocd-dependencies-push-update"
+
+  diary-docker-update:
+    group: diary
+    label_template: "${git[:8]}"
+    materials:
+      git:
+        type: configrepo
+        auto_update: false
+    environment_variables:
+      GIT_AUTHOR_NAME: GoCD pipeline
+      GIT_AUTHOR_EMAIL: diary-docker@gocd.martinmccaffery.com
+      GIT_COMMITTER_NAME: GoCD pipeline
+      GIT_COMMITTER_EMAIL: diary-docker@gocd.martinmccaffery.com
+    stages:
+      - get-updates:
+          clean_workspace: true
+          approval: manual
+          tasks:
+           - exec:
+               command: make
+               arguments:
+                - gocd-dependencies-get-updates
