@@ -50,32 +50,13 @@ need-env-%:
 		exit 1; \
 	fi
 
-# Check for any updates to package lists.
-dependencies-get-updates:
-	rm -rf diary
-	git clone git@github.com:mm689/diary.git
-	cd diary && make package-list.js
-	cp -p diary/package-list.* .
-	rm -f package-list.extra.r
-	sed -E -i '' '/^(#|$$)/d' package-list.r
-	git reset
-	git add package-list.*
-	@if [ -z "$$(git diff --cached)" ]; then echo "No changes to package lists detected" >&2 && exit 1; fi
-	@# Generate and apply a pretty commit message.
-	@git commit -m "[Automatic] Updated \
-	$$(git diff --cached --name-only | sed -E 's/.*[.]([^.]+)$$/\1/' | tr [a-z] [A-Z] \
-	| sort | uniq | tr '\n' ',' | sed 's/,$$//;s/,/ and /') \
-	package list$$(git diff --cached --name-only | tail -n +2 | grep . >/dev/null && echo 's')"
+dependencies-get-updates dependencies-push-update:
+	./$@.sh
+
 gocd-dependencies-get-updates:
 	@$(MAKE) --no-print-directory dependencies-get-updates
 	git push origin master
 
-# Store in the dependent repository an upgraded commit's tag.
-dependencies-push-update:
-	rm -rf diary
-	git clone git@github.com:mm689/diary.git
-	sed -i '' -E "s/(diary-(node-dojo|r-base|r-dojo)):([a-f0-9]{40})/\1:$(shell git rev-parse HEAD)/g" diary/dkr/*
-	cd diary && git commit -m "[Automatic] Upgrading versions of docker images"
 gocd-dependencies-push-update:
 	@$(MAKE) --no-print-directory dependencies-push-update
 	cd diary && git push origin master
