@@ -26,6 +26,7 @@ express-jwt-authz@^2.3.1
 express-jwt@^5.3.1
 express@^4.17.1
 http-status-codes@^1.4.0
+jsonwebtoken@^8.5.1
 jwks-rsa@^1.7.0
 morgan@^1.10.0
 mysql@^2.18.1
@@ -34,10 +35,13 @@ node-fetch@^2.6.0
 nodemon@^2.0.2
 react-dom@^16.9.0
 react-fontawesome@^1.6.1
+react-infinite-scroller@^1.2.4
 react-router-dom@^5.1.2
 react-scripts@3.4.0
 react-test-renderer@^16.13.1
 react@^16.9.0
 request@^2.88.0
+swagger-jsdoc@^4.0.0
+swagger-ui-express@^4.1.4
 ts-node@^8.7.0
 typescript@^3.8.3
