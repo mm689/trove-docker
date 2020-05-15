@@ -1,3 +1,7 @@
 *.image.txt
 node_modules/
 diary/
+
+docker-tex-dojo/*.*
+!docker-tex-dojo/*.sh
+!docker-tex-dojo/*.tex

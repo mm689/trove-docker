@@ -16,6 +16,9 @@ test-docker-r-base: docker-r-base.image.txt
 test-docker-r-dojo: docker-r-dojo.image.txt
 	dojo -image $$(cat $<) docker-r-dojo/tests/test.r
 
+test-docker-tex-dojo: docker-tex-dojo.image.txt
+	dojo -image $$(cat $<) ./docker-tex-dojo/test.sh
+
 test-docker-node-dojo: docker-node-dojo.image.txt
 	dojo -image $$(cat $<) "cd docker-node-dojo && make test"
 
@@ -25,6 +28,7 @@ test-docker-node-dojo: docker-node-dojo.image.txt
 build-docker-node-dojo docker-build-node-dojo: docker-build-node-dojo
 build-docker-r-base docker-build-r-base: docker-build-r-base
 build-docker-r-dojo docker-build-r-dojo: docker-build-r-dojo
+build-docker-tex-dojo docker-build-tex-dojo: docker-build-tex-dojo
 push-docker-node-dojo docker-push-node-dojo: push-docker-node-dojo
 push-docker-r-base docker-push-r-base: push-docker-r-base
 push-docker-r-dojo docker-push-r-dojo: push-docker-r-dojo
@@ -74,4 +78,4 @@ login-aws: need-aws-credentials
 # MANUAL UTILITY RULES
 
 clean:
-	rm -rf *.image.txt */node_modules
+	git clean -xdf

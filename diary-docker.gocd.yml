@@ -49,6 +49,15 @@ pipelines:
                    command: make
                    arguments:
                     - "push-docker-node-dojo"
+            tex:
+              artifacts:
+                - build:
+                    source: docker-tex-dojo.image.txt
+              tasks:
+               - exec:
+                   command: make
+                   arguments:
+                    - "push-docker-tex-dojo"
       - test:
           clean_workspace: true
           jobs:
@@ -85,6 +94,17 @@ pipelines:
                    command: make
                    arguments:
                     - "test-docker-r-dojo"
+            tex-dojo:
+              tasks:
+               - fetch:
+                  stage: build-dojo
+                  job: tex
+                  source: docker-tex-dojo.image.txt
+                  is_file: true
+               - exec:
+                   command: make
+                   arguments:
+                    - "test-docker-tex-dojo"
       - save:
           clean_workspace: true
           environment_variables:

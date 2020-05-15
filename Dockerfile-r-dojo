@@ -11,8 +11,6 @@ RUN apt-get update && \
   /tmp/dojo_git/image_scripts/src/install.sh && \
   rm -r /tmp/dojo_git
 
-# TODO allow en_GB.UTF-8 locale (per early lib.r) (currently en_US)
-
 COPY docker-r-dojo/profile /home/dojo/.profile
 COPY docker-r-dojo/bashrc /home/dojo/.bashrc
 RUN chown dojo:dojo /home/dojo/.profile /home/dojo/.bashrc
