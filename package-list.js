@@ -6,9 +6,12 @@
 @fortawesome/free-regular-svg-icons@^5.11.2
 @fortawesome/free-solid-svg-icons@^5.11.2
 @fortawesome/react-fontawesome@^0.1.7
+@types/mysql@^2.15.10
+@types/node-fetch@^2.5.7
 @types/node@^13.9.2
 @typescript-eslint/eslint-plugin@^2.24.0
 @typescript-eslint/parser@^2.24.0
+aws-sdk@^2.3.0
 aws-sdk@^2.654.0
 cors@^2.8.5
 eslint-config-standard@^14.1.0
@@ -33,6 +36,7 @@ mysql@^2.18.1
 newman@^4.6.1
 node-fetch@^2.6.0
 nodemon@^2.0.2
+promise@^7.1.1
 react-dom@^16.9.0
 react-fontawesome@^1.6.1
 react-infinite-scroller@^1.2.4
