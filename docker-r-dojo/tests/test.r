@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
 
-library(RMySQL)
+library(ggplot2)
 
 cat("Library loaded successfully.\n")
