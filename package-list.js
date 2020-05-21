@@ -45,6 +45,8 @@ react-scripts@3.4.0
 react-test-renderer@^16.13.1
 react@^16.9.0
 request@^2.88.0
+stylelint-config-standard@^20.0.0
+stylelint@^13.5.0
 swagger-jsdoc@^4.0.0
 swagger-ui-express@^4.1.4
 ts-node@^8.7.0
