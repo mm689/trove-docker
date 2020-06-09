@@ -13,6 +13,8 @@
 @typescript-eslint/parser@^3.1.0
 aws-sdk@^2.690.0
 cors@^2.8.5
+db-migrate-mysql@^2.1.1
+db-migrate@^0.11.11
 eslint-config-standard@^14.1.0
 eslint-config-standard@^14.1.1
 eslint-plugin-babel@^5.3.0
