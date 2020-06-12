@@ -33,7 +33,7 @@ push-docker-node-dojo docker-push-node-dojo: push-docker-node-dojo
 push-docker-r-base docker-push-r-base: push-docker-r-base
 push-docker-r-dojo docker-push-r-dojo: push-docker-r-dojo
 
-docker-build-% build-docker-% docker-%.image.txt: Dockerfile-%
+docker-build-% build-docker-%: Dockerfile-%
 	IMAGE_NAME="907983613156.dkr.ecr.eu-west-1.amazonaws.com/diary-$*:$(shell git rev-parse HEAD)" &&\
 	docker build -f Dockerfile-$* -t $$IMAGE_NAME --build-arg TAG=$(shell git rev-parse HEAD) . &&\
 	echo "$$IMAGE_NAME" >docker-$*.image.txt
@@ -44,9 +44,8 @@ package-list.js: ../diary/package-list.js
 package-list.r: ../diary/package-list.r
 	cat $< | grep -Ev '^(#|$$)' >$@
 
-push-docker-%: docker-%.image.txt login-aws
-	$(MAKE) build-docker-$*
-	docker push $$(cat $<)
+push-docker-%: build-docker-% login-aws
+	docker push $(shell cat docker-$*.image.txt)
 
 need-env-%:
 	@if [ -z "$($*)" ]; then \
