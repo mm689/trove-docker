@@ -1,7 +1,7 @@
 
-IMAGE_PREFIX=907983613156.dkr.ecr.eu-west-1.amazonaws.com/
+REPO_USERNAME=trovediary
 IMAGE_TAG=$(shell git rev-parse HEAD)
-IMAGE_NAME=${IMAGE_PREFIX}diary-$*:${IMAGE_TAG}
+IMAGE_NAME=${REPO_USERNAME}/trove-$*:${IMAGE_TAG}
 
 # TOP-LEVEL RULES
 
@@ -49,7 +49,7 @@ package-list.r: ../diary/package-list.r
 docker-%.image.txt:
 	echo ${IMAGE_NAME} >$@
 
-push-docker-%: build-docker-% login-aws
+push-docker-%: build-docker-% login-dockerhub
 	docker push ${IMAGE_NAME}
 
 need-env-%:
@@ -69,12 +69,14 @@ gocd-dependencies-push-update:
 	@$(MAKE) --no-print-directory dependencies-push-update
 	cd diary && git push origin master
 
-need-aws-credentials: need-env-AWS_ACCESS_KEY_ID need-env-AWS_SECRET_ACCESS_KEY
+login-dockerhub: need-env-DOCKERHUB_ACCESS_TOKEN
+	docker login -u ${REPO_USERNAME} -p "$$DOCKERHUB_ACCESS_TOKEN"
 
+# Obsolete rules for storing images in AWS ECR.
+need-aws-credentials: need-env-AWS_ACCESS_KEY_ID need-env-AWS_SECRET_ACCESS_KEY
 run-login-aws:
 	@# Login to AWS registry to be able to push. Do via dojo AWS image, so no need for installing AWS CLI.
 	eval $$(dojo -c Dojofile-aws "aws ecr get-login --region eu-west-1 --no-include-email || echo 'exit 1'")
-
 login-aws: need-aws-credentials
 	$(MAKE) --no-print-directory run-login-aws
 

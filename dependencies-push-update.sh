@@ -2,6 +2,8 @@
 
 # Store in the dependent repository an upgraded commit's tag
 
+PROJECT_NAME=diary
+
 rm -rf diary
 git clone git@github.com:mm689/diary.git
 
@@ -10,7 +12,7 @@ for f in diary/dkr/*; do
   # NB for loop is necessary as 'sed -i' behaviour varies between Linux and OSX
   mv $f $f.bak
   sed -E \
-  "s/(diary-(node-dojo|r-base|r-dojo)):([a-f0-9]{40})/\1:$(git rev-parse HEAD)/g" \
+  "s/((diary|trove)-(node-dojo|r-base|r-dojo)):([a-f0-9]{40})/$PROJECT_NAME-\3:$(git rev-parse HEAD)/g" \
   $f.bak >$f
   rm $f.bak
 done
