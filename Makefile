@@ -1,4 +1,8 @@
 
+IMAGE_PREFIX=907983613156.dkr.ecr.eu-west-1.amazonaws.com/
+IMAGE_TAG=$(shell git rev-parse HEAD)
+IMAGE_NAME=${IMAGE_PREFIX}diary-$*:${IMAGE_TAG}
+
 # TOP-LEVEL RULES
 
 build: build-docker-node-dojo build-docker-r-base
@@ -34,9 +38,7 @@ push-docker-r-base docker-push-r-base: push-docker-r-base
 push-docker-r-dojo docker-push-r-dojo: push-docker-r-dojo
 
 docker-build-% build-docker-%: Dockerfile-%
-	IMAGE_NAME="907983613156.dkr.ecr.eu-west-1.amazonaws.com/diary-$*:$(shell git rev-parse HEAD)" &&\
-	docker build -f Dockerfile-$* -t $$IMAGE_NAME --build-arg TAG=$(shell git rev-parse HEAD) . &&\
-	echo "$$IMAGE_NAME" >docker-$*.image.txt
+	docker build -f Dockerfile-$* -t ${IMAGE_NAME} --build-arg TAG=${IMAGE_TAG} .
 
 # Copy package rules from diary/, assuming that's in a sibling directory.
 package-list.js: ../diary/package-list.js
@@ -44,8 +46,11 @@ package-list.js: ../diary/package-list.js
 package-list.r: ../diary/package-list.r
 	cat $< | grep -Ev '^(#|$$)' >$@
 
+docker-%.image.txt:
+	echo ${IMAGE_NAME} >$@
+
 push-docker-%: build-docker-% login-aws
-	docker push $(shell cat docker-$*.image.txt)
+	docker push ${IMAGE_NAME}
 
 need-env-%:
 	@if [ -z "$($*)" ]; then \

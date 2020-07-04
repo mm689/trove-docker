@@ -15,9 +15,6 @@ pipelines:
           clean_workspace: true
           jobs:
             r:
-              artifacts:
-                - build:
-                    source: docker-r-base.image.txt
               tasks:
                - exec:
                    command: make
@@ -27,32 +24,18 @@ pipelines:
           clean_workspace: true
           jobs:
             r:
-              fetch:
-                  stage: build-base
-                  job: r
-                  source: docker-r-base.image.txt
-                  is_file: true
-              artifacts:
-                - build:
-                    source: docker-r-dojo.image.txt
               tasks:
                - exec:
                    command: make
                    arguments:
                     - "push-docker-r-dojo"
             node:
-              artifacts:
-                - build:
-                    source: docker-node-dojo.image.txt
               tasks:
                - exec:
                    command: make
                    arguments:
                     - "push-docker-node-dojo"
             tex:
-              artifacts:
-                - build:
-                    source: docker-tex-dojo.image.txt
               tasks:
                - exec:
                    command: make
@@ -63,44 +46,24 @@ pipelines:
           jobs:
             node-dojo:
               tasks:
-               - fetch:
-                  stage: build-dojo
-                  job: node
-                  source: docker-node-dojo.image.txt
-                  is_file: true
                - exec:
                    command: make
                    arguments:
                     - "test-docker-node-dojo"
             r-base:
               tasks:
-               - fetch:
-                  stage: build-base
-                  job: r
-                  source: docker-r-base.image.txt
-                  is_file: true
                - exec:
                    command: make
                    arguments:
                     - "test-docker-r-base"
             r-dojo:
               tasks:
-               - fetch:
-                  stage: build-dojo
-                  job: r
-                  source: docker-r-dojo.image.txt
-                  is_file: true
                - exec:
                    command: make
                    arguments:
                     - "test-docker-r-dojo"
             tex-dojo:
               tasks:
-               - fetch:
-                  stage: build-dojo
-                  job: tex
-                  source: docker-tex-dojo.image.txt
-                  is_file: true
                - exec:
                    command: make
                    arguments:
