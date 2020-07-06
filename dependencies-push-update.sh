@@ -12,7 +12,7 @@ for f in diary/dkr/*; do
   # NB for loop is necessary as 'sed -i' behaviour varies between Linux and OSX
   mv $f $f.bak
   sed -E \
-  "s/((diary|trove)-(node-dojo|r-base|r-dojo)):([a-f0-9]{40})/$PROJECT_NAME-\3:$(git rev-parse HEAD)/g" \
+  "s/(((diary|trove)-)?(node-dojo|r-base|r-dojo|tex-dojo)):([a-f0-9]{40})/$PROJECT_NAME-\4:$(git rev-parse HEAD)/g" \
   $f.bak >$f
   rm $f.bak
 done

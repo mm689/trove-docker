@@ -1,5 +1,6 @@
-ARG TAG=latest
-FROM trovediary/trove-r-base:$TAG
+ARG FROM_IMAGE_TAG=latest
+# NB FROM_IMAGE_TAG should be overridden by command line
+FROM trovediary/trove-r-base:$FROM_IMAGE_TAG
 
 # Install common Dojo scripts
 RUN userdel docker

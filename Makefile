@@ -1,56 +1,64 @@
-
+SHELL=/bin/bash
 REPO_USERNAME=trovediary
 IMAGE_TAG=$(shell git rev-parse HEAD)
-IMAGE_NAME=${REPO_USERNAME}/trove-$*:${IMAGE_TAG}
+IMAGE_NAME=${REPO_USERNAME}/$*:${IMAGE_TAG}
 
 # TOP-LEVEL RULES
 
-build: build-docker-node-dojo build-docker-r-base
-	$(MAKE) build-docker-r-dojo
+build: build-docker-trove-node-dojo build-docker-tex-dojo build-docker-trove-r-base
+	$(MAKE) build-docker-trove-r-dojo
 
-push: push-docker-node-dojo push-docker-r-base
-		$(MAKE) push-docker-r-dojo
+push: push-docker-node-dojo build-docker-tex-dojo push-docker-r-base
+	$(MAKE) push-docker-trove-r-dojo
 
 
-# STAGE/IMAGE-SPECIFIC RULES
+# LOWER-LEVEL RULES TO BE MANUALLY INVOKED
 
-test-docker-r-base: docker-r-base.image.txt
+build-docker-node-dojo docker-build-node-dojo:
+build-docker-r-base docker-build-r-base:
+build-docker-r-dojo docker-build-r-dojo:
+build-docker-tex-dojo docker-build-tex-dojo:
+push-docker-node-dojo docker-push-node-dojo:
+push-docker-r-base docker-push-r-base:
+push-docker-r-dojo docker-push-r-dojo:
+push-docker-tex-dojo docker-push-tex-dojo:
+
+
+# IMAGE-SPECIFIC RULES
+
+test-docker-r-base test-docker-trove-r-base: docker-trove-r-base.image.txt
 	dojo -image $$(cat $<) docker-r-dojo/tests/test.r
 
-test-docker-r-dojo: docker-r-dojo.image.txt
+test-docker-r-dojo test-docker-trove-r-dojo: docker-trove-r-dojo.image.txt
 	dojo -image $$(cat $<) docker-r-dojo/tests/test.r
+
+test-docker-node-dojo test-docker-trove-node-dojo: docker-trove-node-dojo.image.txt
+	dojo -image $$(cat $<) "cd docker-node-dojo && make test"
 
 test-docker-tex-dojo: docker-tex-dojo.image.txt
 	dojo -image $$(cat $<) ./docker-tex-dojo/test.sh
 
-test-docker-node-dojo: docker-node-dojo.image.txt
-	dojo -image $$(cat $<) "cd docker-node-dojo && make test"
 
+# IMAGE GENERATION
 
-# UTILITY RULES
+build-docker-% docker-build-%: Dockerfile-trove-%
+	@$(MAKE) --no-print-directory docker-build-trove-$*
 
-build-docker-node-dojo docker-build-node-dojo: docker-build-node-dojo
-build-docker-r-base docker-build-r-base: docker-build-r-base
-build-docker-r-dojo docker-build-r-dojo: docker-build-r-dojo
-build-docker-tex-dojo docker-build-tex-dojo: docker-build-tex-dojo
-push-docker-node-dojo docker-push-node-dojo: push-docker-node-dojo
-push-docker-r-base docker-push-r-base: push-docker-r-base
-push-docker-r-dojo docker-push-r-dojo: push-docker-r-dojo
-
-docker-build-% build-docker-%: Dockerfile-%
-	docker build -f Dockerfile-$* -t ${IMAGE_NAME} --build-arg TAG=${IMAGE_TAG} .
+build-docker-% docker-build-%: Dockerfile-%
+	docker build -f $< -t ${IMAGE_NAME} $(shell \
+		[ "$*" == "trove-r-dojo" ] && echo "--build-arg FROM_IMAGE_TAG=${IMAGE_TAG}") .
 
 docker-%.image.txt:
 	echo ${IMAGE_NAME} >$@
 
-push-docker-%: build-docker-% login-dockerhub
+push-docker-% docker-push-%: Dockerfile-trove-%
+	@$(MAKE) --no-print-directory push-docker-trove-$*
+
+push-docker-% docker-push-%: build-docker-% login-dockerhub
 	docker push ${IMAGE_NAME}
 
-need-env-%:
-	@if [ -z "$($*)" ]; then \
-		echo "Missing environment variable: $*" >&2; \
-		exit 1; \
-	fi
+
+# REPOSITORY SYMBIOSIS
 
 dependencies-get-updates dependencies-push-update:
 	./$@.sh
@@ -62,6 +70,9 @@ gocd-dependencies-get-updates:
 gocd-dependencies-push-update:
 	@$(MAKE) --no-print-directory dependencies-push-update
 	cd diary && git push origin master
+
+
+# AUTHENTICATION
 
 login-dockerhub: need-env-DOCKERHUB_ACCESS_TOKEN
 	docker login -u ${REPO_USERNAME} -p "$$DOCKERHUB_ACCESS_TOKEN"
@@ -75,7 +86,13 @@ login-aws: need-aws-credentials
 	$(MAKE) --no-print-directory run-login-aws
 
 
-# MANUAL UTILITY RULES
+# UTILITY RULES
+
+need-env-%:
+	@if [ -z "$($*)" ]; then \
+		echo "Missing environment variable: $*" >&2; \
+		exit 1; \
+	fi
 
 clean:
 	git clean -xdf
