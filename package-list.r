@@ -1,8 +1,8 @@
 
-# This file is automatically updated through the diary-docker-update pipeline
+# This file is automatically updated through the trove-docker-update pipeline
 #  through `make dependencies-get-updates`.
-# It reflects the packages used by the diary repo, and is used to pre-install
-#  these in the diary-r-base Docker image which can then be used in development
+# It reflects the packages used by the trove repo, and is used to pre-install
+#  these in the trove-r-base Docker image which can then be used in development
 #  and deployment of that repository.
 
 list.of.packages <- c('jsonlite', 'methods', 'ggplot2', 'gtools', 'stringr',

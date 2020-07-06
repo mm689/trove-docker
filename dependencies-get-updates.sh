@@ -5,7 +5,7 @@
 rm -rf diary
 git clone git@github.com:mm689/diary.git
 
-mv package-list.r package-list.diary-docker.r
+mv package-list.r package-list.trove-docker.r
 
 cd diary
 make package-list.js
@@ -31,16 +31,16 @@ if [ ! -z "$new_packages" ]; then
   package_list=$(echo "$package_list" | fold -w 78 -s | sed "s/^'/  '/;s/ $//")
 
   # Work out the location of the package list in our own copy of the file.
-  package_list_start=$(grep --fixed -n " c(" package-list.diary-docker.r | cut -d: -f1)
-  package_list_end=$(grep -n ")$" package-list.diary-docker.r | cut -d: -f1)
+  package_list_start=$(grep --fixed -n " c(" package-list.trove-docker.r | cut -d: -f1)
+  package_list_end=$(grep -n ")$" package-list.trove-docker.r | cut -d: -f1)
 
   # Overwrite the original package list with the updated one.
-  head -n $(( $package_list_start - 1 )) package-list.diary-docker.r >package-list.r
+  head -n $(( $package_list_start - 1 )) package-list.trove-docker.r >package-list.r
   echo "$package_list" >>package-list.r
-  tail -n +$(( $package_list_end + 1 )) package-list.diary-docker.r >>package-list.r
+  tail -n +$(( $package_list_end + 1 )) package-list.trove-docker.r >>package-list.r
 
 else
-  mv package-list.diary-docker.r package-list.r
+  mv package-list.trove-docker.r package-list.r
 fi
 
 # Tidy up a bit.

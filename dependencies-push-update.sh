@@ -2,7 +2,7 @@
 
 # Store in the dependent repository an upgraded commit's tag
 
-PROJECT_NAME=diary
+PROJECT_NAME=trove
 
 rm -rf diary
 git clone git@github.com:mm689/diary.git

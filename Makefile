@@ -40,12 +40,6 @@ push-docker-r-dojo docker-push-r-dojo: push-docker-r-dojo
 docker-build-% build-docker-%: Dockerfile-%
 	docker build -f Dockerfile-$* -t ${IMAGE_NAME} --build-arg TAG=${IMAGE_TAG} .
 
-# Copy package rules from diary/, assuming that's in a sibling directory.
-package-list.js: ../diary/package-list.js
-	cp -p $< .
-package-list.r: ../diary/package-list.r
-	cat $< | grep -Ev '^(#|$$)' >$@
-
 docker-%.image.txt:
 	echo ${IMAGE_NAME} >$@
 
