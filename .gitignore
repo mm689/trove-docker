@@ -1,6 +1,7 @@
 *.image.txt
 node_modules/
 diary/
+trove/
 
 docker-tex-dojo/*.*
 !docker-tex-dojo/*.sh

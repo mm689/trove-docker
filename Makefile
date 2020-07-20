@@ -69,7 +69,7 @@ gocd-dependencies-get-updates:
 
 gocd-dependencies-push-update:
 	@$(MAKE) --no-print-directory dependencies-push-update
-	cd diary && git push origin master
+	cd trove && git push origin master
 
 
 # AUTHENTICATION

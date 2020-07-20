@@ -2,12 +2,12 @@
 
 # Check for any updates to package lists.
 
-rm -rf diary
-git clone git@github.com:mm689/diary.git
+rm -rf trove
+git clone git@github.com:mm689/trove.git
 
 mv package-list.r package-list.trove-docker.r
 
-cd diary
+cd trove
 make package-list.js
 cp -p package-list.* ~-
 cd ~-

@@ -4,11 +4,11 @@
 
 PROJECT_NAME=trove
 
-rm -rf diary
-git clone git@github.com:mm689/diary.git
+rm -rf trove
+git clone git@github.com:mm689/trove.git
 
 # Replace git commit hashes with the current commit's
-for f in diary/dkr/*; do
+for f in trove/dkr/*; do
   # NB for loop is necessary as 'sed -i' behaviour varies between Linux and OSX
   mv $f $f.bak
   sed -E \
@@ -18,9 +18,9 @@ for f in diary/dkr/*; do
 done
 
 # Remove any comments etc. in our version of the file.
-sed -E '/^(#|$)/d' package-list.r >diary/package-list.new.r
+sed -E '/^(#|$)/d' package-list.r >trove/package-list.new.r
 
-cd diary
+cd trove
 
 # Work out where the package list is in package-list.r
 mv package-list.r package-list.orig.r
