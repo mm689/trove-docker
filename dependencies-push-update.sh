@@ -2,8 +2,6 @@
 
 # Store in the dependent repository an upgraded commit's tag
 
-PROJECT_NAME=trove
-
 rm -rf trove
 git clone git@github.com:mm689/trove.git
 
@@ -12,7 +10,7 @@ for f in trove/dkr/*; do
   # NB for loop is necessary as 'sed -i' behaviour varies between Linux and OSX
   mv $f $f.bak
   sed -E \
-  "s/(((diary|trove)-)?(node-dojo|r-base|r-dojo|tex-dojo)):([a-f0-9]{40})/$PROJECT_NAME-\4:$(git rev-parse HEAD)/g" \
+  "s~(trovediary/((diary|trove)-)?(node-dojo|r-base|r-dojo|tex-dojo)):([a-f0-9]{40})~\1:$(git rev-parse HEAD)~g" \
   $f.bak >$f
   rm $f.bak
 done
