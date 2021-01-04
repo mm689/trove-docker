@@ -5,7 +5,7 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 
 # Install common Dojo scripts
-ENV DOJO_VERSION=0.8.0
+ENV DOJO_VERSION=0.10.3
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   sudo git ca-certificates && \

@@ -1,4 +1,4 @@
-FROM kudulab/node-dojo:0.1.0
+FROM kudulab/node-dojo:0.2.0
 
 RUN apk update &&\
 	apk add --no-cache mysql-client make

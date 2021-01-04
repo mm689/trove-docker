@@ -4,7 +4,7 @@ FROM trovediary/trove-r-base:$FROM_IMAGE_TAG
 
 # Install common Dojo scripts
 RUN userdel docker
-ENV DOJO_VERSION=0.6.2
+ENV DOJO_VERSION=0.10.3
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   sudo git ca-certificates && \
