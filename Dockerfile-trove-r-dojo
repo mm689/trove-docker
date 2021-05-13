@@ -1,20 +1,23 @@
-ARG FROM_IMAGE_TAG=latest
-# NB FROM_IMAGE_TAG should be overridden by command line
-FROM trovediary/trove-r-base:$FROM_IMAGE_TAG
+ARG BASE_IMAGE_TAG=latest
+ARG BASE_IMAGE=trovediary/trove-r-base:$BASE_IMAGE_TAG
+FROM $BASE_IMAGE
+
+# Adds Dojo to the base R image, plus some default config.
+
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin/tini
+RUN chmod +x /sbin/tini
 
 # Install common Dojo scripts
-RUN userdel docker
 ENV DOJO_VERSION=0.10.3
 RUN apt-get update && \
-  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-  sudo git ca-certificates && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo git ca-certificates && \
   git clone --depth 1 -b ${DOJO_VERSION} https://github.com/kudulab/dojo.git /tmp/dojo_git &&\
   /tmp/dojo_git/image_scripts/src/install.sh && \
-  rm -r /tmp/dojo_git
+  rm -r /tmp/dojo_git && \
+  echo 'dojo ALL=(ALL) NOPASSWD: ALL' >>/etc/sudoers
 
-COPY docker-r-dojo/profile /home/dojo/.profile
-COPY docker-r-dojo/bashrc /home/dojo/.bashrc
-RUN chown dojo:dojo /home/dojo/.profile /home/dojo/.bashrc
+WORKDIR /dojo/work
 
 ENTRYPOINT ["/tini", "-g", "--", "/usr/bin/entrypoint.sh"]
 CMD ["/bin/bash"]

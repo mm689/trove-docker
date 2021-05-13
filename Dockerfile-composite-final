@@ -1,0 +1,19 @@
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+ARG USERNAME='dojo'
+
+# Final-stage prep that works differently depending on if we're building dojo or CircleCI image
+
+# Preinstall terraform plugins
+ENV TF_PLUGIN_CACHE_DIR="/home/${USERNAME}/.terraform.d/plugins-cache"
+RUN export PACKAGES="aws=3.42.0 local=2.1.0 template=2.2.0 time=0.7.1" \
+  && for packageversion in $PACKAGES; do \
+    PACKAGE=${packageversion%%=*}; \
+    VERSION=${packageversion#*=}; \
+    wget https://releases.hashicorp.com/terraform-provider-${PACKAGE}/${VERSION}/terraform-provider-${PACKAGE}_${VERSION}_linux_amd64.zip && \
+    unzip terraform-provider-${PACKAGE}_${VERSION}_linux_amd64.zip && \
+    rm terraform-provider-${PACKAGE}_${VERSION}_linux_amd64.zip && \
+    mkdir -p $TF_PLUGIN_CACHE_DIR/registry.terraform.io/hashicorp/${PACKAGE}/${VERSION}/linux_amd64 && \
+    mv terraform-provider-${PACKAGE}* $TF_PLUGIN_CACHE_DIR/registry.terraform.io/hashicorp/${PACKAGE}/${VERSION}/linux_amd64; \
+  done \
+  && chown -R $USERNAME:$USERNAME $TF_PLUGIN_CACHE_DIR

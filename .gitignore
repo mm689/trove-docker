@@ -6,3 +6,5 @@ trove/
 docker-tex-dojo/*.*
 !docker-tex-dojo/*.sh
 !docker-tex-dojo/*.tex
+.terraform
+*.log

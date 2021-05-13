@@ -5,39 +5,64 @@ IMAGE_NAME=${REPO_USERNAME}/$*:${IMAGE_TAG}
 
 # TOP-LEVEL RULES
 
-build: build-docker-trove-node-dojo build-docker-tex-dojo build-docker-trove-r-base
-	$(MAKE) build-docker-trove-r-dojo
+build: build-docker-node-base build-docker-tex-dojo build-docker-r-base
+	$(MAKE) build-docker-node-dojo build-docker-r-dojo
 
-push: push-docker-node-dojo build-docker-tex-dojo push-docker-r-base
-	$(MAKE) push-docker-trove-r-dojo
+push: push-docker-node-base build-docker-tex-dojo push-docker-r-base
+	$(MAKE) push-docker-node-dojo push-docker-r-dojo
 
 
 # LOWER-LEVEL RULES TO BE MANUALLY INVOKED
 
+build-docker-node-base docker-build-node-base:
 build-docker-node-dojo docker-build-node-dojo:
 build-docker-r-base docker-build-r-base:
 build-docker-r-dojo docker-build-r-dojo:
 build-docker-tex-dojo docker-build-tex-dojo:
+push-docker-node-base docker-push-node-base:
 push-docker-node-dojo docker-push-node-dojo:
 push-docker-r-base docker-push-r-base:
 push-docker-r-dojo docker-push-r-dojo:
 push-docker-tex-dojo docker-push-tex-dojo:
 
-
 # IMAGE-SPECIFIC RULES
 
 test-docker-r-base test-docker-trove-r-base: docker-trove-r-base.image.txt
-	dojo -image $$(cat $<) docker-r-dojo/tests/test.r
+	dojo -image $(shell cat $<) docker-r-dojo/tests/test.r
 
 test-docker-r-dojo test-docker-trove-r-dojo: docker-trove-r-dojo.image.txt
-	dojo -image $$(cat $<) docker-r-dojo/tests/test.r
+	dojo -image $(shell cat $<) docker-r-dojo/tests/test.r
 
 test-docker-node-dojo test-docker-trove-node-dojo: docker-trove-node-dojo.image.txt
-	dojo -image $$(cat $<) "cd docker-node-dojo && make test"
+	dojo -image $(shell cat $<) "cd docker-node-dojo && make test"
 
 test-docker-tex-dojo: docker-tex-dojo.image.txt
-	dojo -image $$(cat $<) ./docker-tex-dojo/test.sh
+	dojo -image $(shell cat $<) ./docker-tex-dojo/test.sh
 
+test-docker-composite: test-docker-composite-node test-docker-composite-r test-docker-composite-terraform
+test-docker-composite-node: docker-composite.dojo.image.txt
+	dojo -image $(shell cat $<) "cd docker-node-dojo && make test"
+test-docker-composite-r: docker-composite.dojo.image.txt
+	dojo -image $(shell cat $<) docker-r-dojo/tests/test.r
+test-docker-composite-terraform: test-docker-composite-terraform-dojo test-docker-composite-terraform-circleci
+
+test-docker-composite-terraform-dojo: docker-composite.dojo.image.txt
+	rm -rf docker-composite/.terraform/
+	dojo -image $(shell cat $<) "cd docker-composite && terraform init" | tee tf.dojo.log
+	@echo "Checking Dojo image loads pre-installed terraform modules..."
+	@export installed=$$(grep "[Ii]nstalling" tf.dojo.log | wc -l) && [[ "$$installed" -eq 1 ]] || \
+		(echo "Error: dojo image installed wrong number of terraform packages: $$installed" && exit 1)
+	@export preloaded=$$(grep "Using [a-z/]* v[0-9.]* from the shared cache directory" tf.dojo.log | wc -l) && [[ "$$preloaded" -eq 4 ]] || \
+		(echo "Error: dojo image preloaded wrong number of terraform packages: $$preloaded" && exit 1)
+
+test-docker-composite-terraform-circleci: docker-composite.circleci.image.txt
+	rm -rf docker-composite/.terraform/
+	docker run -ti -v $$(pwd):/home/circleci/project trovediary/trove-composite:circleci-$(IMAGE_TAG) bash -c "cd docker-composite && terraform init" | tee tf.circleci.log
+	@echo "Checking CircleCI image loads pre-installed terraform modules..."
+	@export installed=$$(grep "[Ii]nstalling" tf.circleci.log | wc -l) && [[ "$$installed" -eq 1 ]] || \
+		(echo "Error: circleci image installed wrong number of terraform packages: $$installed" && exit 1)
+	@export preloaded=$$(grep "Using [a-z/]* v[0-9.]* from the shared cache directory" tf.circleci.log | wc -l) && [[ "$$preloaded" -eq 4 ]] || \
+		(echo "Error: circleci image preloaded wrong number of terraform packages: $$preloaded" && exit 1)
 
 # IMAGE GENERATION
 
@@ -46,8 +71,31 @@ build-docker-% docker-build-%: Dockerfile-trove-%
 
 build-docker-% docker-build-%: Dockerfile-%
 	docker build -f $< -t ${IMAGE_NAME} $(shell \
-		[ "$*" == "trove-r-dojo" ] && echo "--build-arg FROM_IMAGE_TAG=${IMAGE_TAG}") .
+		[[ "$*" == *dojo ]] && echo "--build-arg BASE_IMAGE_TAG=${IMAGE_TAG}") .
+	echo ${IMAGE_NAME} >docker-$*.image.txt
 
+build-docker-composite docker-build-composite:
+	docker build -f Dockerfile-trove-r-base -t $(REPO_USERNAME)/trove-composite:r-base-$(IMAGE_TAG) --build-arg BASE_IMAGE=ubuntu:20.04 .
+	docker build -f Dockerfile-trove-node-base -t $(REPO_USERNAME)/trove-composite:node-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:r-base-$(IMAGE_TAG) .
+	docker build -f Dockerfile-composite-misc -t $(REPO_USERNAME)/trove-composite:misc-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:node-$(IMAGE_TAG) .
+	docker build -f Dockerfile-trove-r-dojo -t $(REPO_USERNAME)/trove-composite:pre-dojo-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:misc-$(IMAGE_TAG) .
+	docker build -f Dockerfile-composite-final -t $(REPO_USERNAME)/trove-composite:dojo-$(IMAGE_TAG) --build-arg USERNAME=dojo --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:pre-dojo-$(IMAGE_TAG) .
+	echo "$(REPO_USERNAME)/trove-composite:dojo-$(IMAGE_TAG)" >docker-composite.dojo.image.txt
+	docker build -f Dockerfile-composite-circleci -t $(REPO_USERNAME)/trove-composite:pre-circleci-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:misc-$(IMAGE_TAG) .
+	docker build -f Dockerfile-composite-final -t $(REPO_USERNAME)/trove-composite:circleci-$(IMAGE_TAG) --build-arg USERNAME=circleci --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:pre-circleci-$(IMAGE_TAG) .
+	echo "$(REPO_USERNAME)/trove-composite:circleci-$(IMAGE_TAG)" >docker-composite.circleci.image.txt
+
+enter-composite-dojo:
+	dojo -image trovediary/trove-composite:dojo-$(IMAGE_TAG) bash
+enter-composite-circleci:
+	docker run -ti -v $(PWD):/home/circleci/project trovediary/trove-composite:circleci-$(IMAGE_TAG)
+enter-node-dojo:
+	dojo -image trovediary/trove-node-dojo:$(IMAGE_TAG) bash
+enter-r-dojo:
+	dojo -image trovediary/trove-r-dojo:$(IMAGE_TAG) bash
+
+docker-composite.%.image.txt:
+	echo "${REPO_USERNAME}/trove-composite:$*-${IMAGE_TAG}" >$@
 docker-%.image.txt:
 	echo ${IMAGE_NAME} >$@
 
@@ -56,6 +104,11 @@ push-docker-% docker-push-%: Dockerfile-trove-%
 
 push-docker-% docker-push-%: build-docker-% login-dockerhub
 	docker push ${IMAGE_NAME}
+
+docker-push-composite-circleci push-docker-composite-circleci: build-docker-composite
+	docker push $(REPO_USERNAME)/trove-composite:circleci-$(IMAGE_TAG)
+docker-push-composite-dojo push-docker-composite-dojo: build-docker-composite
+	docker push $(REPO_USERNAME)/trove-composite:dojo-$(IMAGE_TAG)
 
 
 # REPOSITORY SYMBIOSIS

@@ -17,7 +17,23 @@ pipelines:
                - exec:
                    command: make
                    arguments:
-                    - "push-docker-r-base"
+                   - push-docker-r-base
+            node:
+              tasks:
+               - exec:
+                   command: make
+                   arguments:
+                   - push-docker-node-base
+            composite:
+              tasks:
+              - exec:
+                  command: make
+                  arguments:
+                  - push-docker-composite-circleci
+              - exec:
+                  command: make
+                  arguments:
+                  - push-docker-composite-dojo
       - build-dojo:
           clean_workspace: true
           jobs:
@@ -60,6 +76,20 @@ pipelines:
                    command: make
                    arguments:
                     - "test-docker-r-dojo"
+            composite:
+              tasks:
+              - exec:
+                  command: make
+                  arguments:
+                  - test-docker-composite-node
+              - exec:
+                  command: make
+                  arguments:
+                  - test-docker-composite-r
+              - exec:
+                  command: make
+                  arguments:
+                  - test-docker-composite-terraform-dojo
             tex-dojo:
               tasks:
                - exec:

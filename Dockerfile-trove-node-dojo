@@ -1,9 +1,23 @@
-FROM kudulab/node-dojo:0.2.0
+ARG BASE_IMAGE_TAG=latest
+FROM trovediary/trove-node-base:$BASE_IMAGE_TAG
 
-RUN apk update &&\
-	apk add --no-cache mysql-client make
+# Note: this image is not currently used in the composite image.
+# It merely installs dojo on a base.
 
-WORKDIR /usr/src/app
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin/tini
+RUN chmod +x /sbin/tini
 
-COPY package-list.js .
-RUN yarn global add $(cat package-list.js)
+# Install common Dojo scripts
+ENV DOJO_VERSION=0.10.3
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo git ca-certificates && \
+  git clone --depth 1 -b ${DOJO_VERSION} https://github.com/kudulab/dojo.git /tmp/dojo_git &&\
+  /tmp/dojo_git/image_scripts/src/install.sh && \
+  rm -r /tmp/dojo_git && \
+  echo 'dojo ALL=(ALL) NOPASSWD: ALL' >>/etc/sudoers
+
+WORKDIR /dojo/work
+
+ENTRYPOINT ["/sbin/tini", "-g", "--", "/usr/bin/entrypoint.sh"]
+CMD ["/bin/bash"]

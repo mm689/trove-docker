@@ -6,11 +6,11 @@ rm -rf trove
 git clone git@github.com:mm689/trove.git
 
 # Replace git commit hashes with the current commit's
-for f in trove/dkr/*; do
+for f in trove/dkr/* .circleci/config.yaml; do
   # NB for loop is necessary as 'sed -i' behaviour varies between Linux and OSX
   mv $f $f.bak
   sed -E \
-  "s~(trovediary/((diary|trove)-)?(node-dojo|r-base|r-dojo|tex-dojo)):([a-f0-9]{40})~\1:$(git rev-parse HEAD)~g" \
+  "s~(trovediary/((diary|trove)-)?(node-dojo|r-base|r-dojo|tex-dojo|composite)):([a-z]+-)([a-f0-9]{40})~\1:$(git rev-parse HEAD)~g" \
   $f.bak >$f
   rm $f.bak
 done
