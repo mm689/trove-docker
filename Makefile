@@ -57,7 +57,7 @@ test-docker-composite-terraform-dojo: docker-composite.dojo.image.txt
 
 test-docker-composite-terraform-circleci: docker-composite.circleci.image.txt
 	rm -rf docker-composite/.terraform/
-	docker run -ti -v $$(pwd):/home/circleci/project trovediary/trove-composite:circleci-$(IMAGE_TAG) bash -c "cd docker-composite && terraform init" | tee tf.circleci.log
+	docker run --rm -ti --name circleci-test -v $$(pwd):/home/circleci/project trovediary/trove-composite:circleci-$(IMAGE_TAG) bash -c "cd docker-composite && terraform init" | tee tf.circleci.log
 	@echo "Checking CircleCI image loads pre-installed terraform modules..."
 	@export installed=$$(grep "[Ii]nstalling" tf.circleci.log | wc -l) && [[ "$$installed" -eq 1 ]] || \
 		(echo "Error: circleci image installed wrong number of terraform packages: $$installed" && exit 1)
@@ -88,7 +88,7 @@ build-docker-composite docker-build-composite:
 enter-composite-dojo:
 	dojo -image trovediary/trove-composite:dojo-$(IMAGE_TAG) bash
 enter-composite-circleci:
-	docker run -ti -v $(PWD):/home/circleci/project trovediary/trove-composite:circleci-$(IMAGE_TAG)
+	docker run --rm --name circleci-test -ti -v $(PWD):/home/circleci/project trovediary/trove-composite:circleci-$(IMAGE_TAG)
 enter-node-dojo:
 	dojo -image trovediary/trove-node-dojo:$(IMAGE_TAG) bash
 enter-r-dojo:

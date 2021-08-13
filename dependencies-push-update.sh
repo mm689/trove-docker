@@ -5,20 +5,22 @@
 rm -rf trove
 git clone git@github.com:mm689/trove.git
 
-# Replace git commit hashes with the current commit's
-for f in trove/dkr/* .circleci/config.yaml; do
-  # NB for loop is necessary as 'sed -i' behaviour varies between Linux and OSX
-  mv $f $f.bak
-  sed -E \
-  "s~(trovediary/((diary|trove)-)?(node-dojo|r-base|r-dojo|tex-dojo|composite)):([a-z]+-)([a-f0-9]{40})~\1:$(git rev-parse HEAD)~g" \
-  $f.bak >$f
-  rm $f.bak
-done
+CURRENT_COMMIT=$(git rev-parse HEAD)
 
-# Remove any comments etc. in our version of the file.
+# Remove any comments etc. in our version of the R package list.
 sed -E '/^(#|$)/d' package-list.r >trove/package-list.new.r
 
 cd trove
+
+# Replace git commit hashes with the current commit's
+for f in dkr/* .circleci/config.yml; do
+  # NB for loop is necessary as 'sed -i' behaviour varies between Linux and OSX
+  mv $f $f.bak
+  sed -E \
+  "s~(trovediary/((diary|trove)-)?(node-dojo|r-base|r-dojo|tex-dojo|composite)):([a-z]+-)?([a-f0-9]{40})~\1:\5$CURRENT_COMMIT~g" \
+  $f.bak >$f
+  rm $f.bak
+done
 
 # Work out where the package list is in package-list.r
 mv package-list.r package-list.orig.r
