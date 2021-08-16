@@ -20,7 +20,7 @@ RUN apt-get update && \
   apt-get install --no-install-recommends -y \
     ansible=2.10.7-1ppa~focal \
     rsync \
-    terraform=0.15.4 \
+    terraform=1.0.4 \
   && rm -rf /var/lib/apt/lists/*
 
 
