@@ -66,6 +66,14 @@ test-docker-composite-terraform-circleci: docker-composite.circleci.image.txt
 
 # IMAGE GENERATION
 
+pull-composite-%-if-available:
+	@echo "Attempting to pull existing trove-$* image, for caching..."
+	docker pull $(REPO_USERNAME)/trove-composite:$*-$(IMAGE_TAG) || true
+
+pull-%-if-available:
+	@echo "Attempting to pull existing trove-$* image, for caching..."
+	docker pull $(REPO_USERNAME)/trove-$*:$(IMAGE_TAG) || true
+
 build-docker-% docker-build-%: Dockerfile-trove-%
 	@$(MAKE) --no-print-directory docker-build-trove-$*
 
@@ -99,16 +107,18 @@ docker-composite.%.image.txt:
 docker-%.image.txt:
 	echo ${IMAGE_NAME} >$@
 
+push-docker-composite docker-push-composite: push-docker-composite-circleci push-docker-composite-dojo
+	@echo "CircleCI and Dojo composite images successfully pushed."
+docker-push-composite-circleci push-docker-composite-circleci: login-dockerhub build-docker-composite
+	docker push $(REPO_USERNAME)/trove-composite:circleci-$(IMAGE_TAG)
+docker-push-composite-dojo push-docker-composite-dojo: login-dockerhub build-docker-composite
+	docker push $(REPO_USERNAME)/trove-composite:dojo-$(IMAGE_TAG)
+
 push-docker-% docker-push-%: Dockerfile-trove-%
 	@$(MAKE) --no-print-directory push-docker-trove-$*
 
 push-docker-% docker-push-%: build-docker-% login-dockerhub
 	docker push ${IMAGE_NAME}
-
-docker-push-composite-circleci push-docker-composite-circleci: build-docker-composite
-	docker push $(REPO_USERNAME)/trove-composite:circleci-$(IMAGE_TAG)
-docker-push-composite-dojo push-docker-composite-dojo: build-docker-composite
-	docker push $(REPO_USERNAME)/trove-composite:dojo-$(IMAGE_TAG)
 
 
 # REPOSITORY SYMBIOSIS
@@ -128,7 +138,7 @@ gocd-dependencies-push-update:
 # AUTHENTICATION
 
 login-dockerhub: need-env-DOCKERHUB_ACCESS_TOKEN
-	docker login -u ${REPO_USERNAME} -p "$$DOCKERHUB_ACCESS_TOKEN"
+	echo "$$DOCKERHUB_ACCESS_TOKEN" | docker login -u ${REPO_USERNAME} --password-stdin
 
 # Obsolete rules for storing images in AWS ECR.
 need-aws-credentials: need-env-AWS_ACCESS_KEY_ID need-env-AWS_SECRET_ACCESS_KEY

@@ -1,0 +1,196 @@
+version: 2.1
+
+workflows:
+
+  trove-docker:
+    jobs:
+      - allow-commit:
+          type: approval
+
+      - build-r-base:
+          requires:
+            - allow-commit
+      - test-r-base:
+          requires:
+            - build-r-base
+      - build-r-dojo:
+          requires:
+            - test-r-base
+      - test-r-dojo:
+          requires:
+            - build-r-dojo
+
+      - build-node-base:
+          requires:
+            - allow-commit
+      - test-node-base:
+          requires:
+            - build-node-base
+      - build-node-dojo:
+          requires:
+            - test-node-base
+      - test-node-dojo:
+          requires:
+            - build-node-dojo
+
+      - build-composite:
+          requires:
+            - allow-commit
+      - test-composite:
+          requires:
+            - build-composite
+
+      - build-tex-dojo:
+          requires:
+            - allow-commit
+      - test-tex-dojo:
+          requires:
+            - build-tex-dojo
+
+      - update-trove:
+          requires:
+            - test-r-dojo
+            - test-node-dojo
+            - test-composite
+            - test-tex-dojo
+          filters:
+            branches:
+              only: master
+
+
+##########
+
+jobs:
+
+  build-r-base:
+    executor: trove-docker
+    steps:
+      - push-docker-image:
+          image: r-base
+  test-r-base:
+    executor: trove-machine
+    steps:
+      - test-docker-image:
+          image: r-base
+  build-r-dojo:
+    executor: trove-docker
+    steps:
+      - push-docker-image:
+          image: r-dojo
+  test-r-dojo:
+    executor: trove-machine
+    steps:
+      - test-docker-image:
+          image: r-dojo
+
+  build-node-base:
+    executor: trove-docker
+    steps:
+      - push-docker-image:
+          image: node-base
+  test-node-base:
+    executor: trove-machine
+    steps:
+      - test-docker-image:
+          image: node-base
+  build-node-dojo:
+    executor: trove-docker
+    steps:
+      - push-docker-image:
+          image: node-dojo
+  test-node-dojo:
+    executor: trove-machine
+    steps:
+      - test-docker-image:
+          image: node-dojo
+
+  build-composite:
+    executor: trove-docker
+    steps:
+      - push-docker-image:
+          image: composite
+  test-composite:
+    executor: trove-machine
+    steps:
+      - test-docker-image:
+          image: composite
+
+  build-tex-dojo:
+    executor: trove-docker
+    steps:
+      - push-docker-image:
+          image: tex-dojo
+  test-tex-dojo:
+    executor: trove-machine
+    steps:
+      - test-docker-image:
+          image: tex-dojo
+
+  update-trove:
+    executor: trove-docker
+    environment:
+      GIT_AUTHOR_NAME: CircleCI workflow
+      GIT_AUTHOR_EMAIL: trove-docker@app.circleci.com
+      GIT_COMMITTER_NAME: CircleCI workflow
+      GIT_COMMITTER_EMAIL: trove-docker@app.circleci.com
+    steps:
+      - checkout
+      - install-dojo
+      - add-key
+      - run:
+          command: make gocd-dependencies-push-update
+
+
+##########
+
+commands:
+
+  push-docker-image:
+    parameters:
+      image:
+        description: Suffix of docker image to push
+        type: string
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 20.10.6
+      - run:
+          command: make push-docker-<< parameters.image >>
+
+  test-docker-image:
+    parameters:
+      image:
+        description: Suffix of docker image to test
+        type: string
+    steps:
+      - checkout
+      - install-dojo
+      - run:
+          command: make test-docker-<< parameters.image >>
+
+  install-dojo:
+    steps:
+      - run:
+          name: Install dojo
+          command: |
+            version="0.10.3"
+            wget -O /tmp/dojo https://github.com/kudulab/dojo/releases/download/${version}/dojo_linux_amd64
+            chmod +x /tmp/dojo
+            sudo mv /tmp/dojo /usr/bin/dojo
+
+  add-key:
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "23:f6:1d:ca:a2:66:5e:a8:27:75:ce:e6:fa:f7:e5:ae"
+
+##########
+
+executors:
+  trove-docker:
+    docker:
+      - image: cimg/base:2021.07
+
+  trove-machine:
+    machine:
+      image: ubuntu-2004:202101-01

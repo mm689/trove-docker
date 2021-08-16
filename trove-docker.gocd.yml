@@ -89,7 +89,7 @@ pipelines:
               - exec:
                   command: make
                   arguments:
-                  - test-docker-composite-terraform-dojo
+                  - test-docker-composite-terraform
             tex-dojo:
               tasks:
                - exec:
