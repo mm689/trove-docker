@@ -3,7 +3,7 @@
 # Store in the dependent repository an upgraded commit's tag
 
 rm -rf trove
-git clone git@github.com:mm689/trove.git
+git clone git@github.com:mm689/trove.git trove
 
 CURRENT_COMMIT=$(git rev-parse HEAD)
 

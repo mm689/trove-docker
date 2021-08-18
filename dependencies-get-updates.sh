@@ -3,7 +3,7 @@
 # Check for any updates to package lists.
 
 rm -rf trove
-git clone git@github.com:mm689/trove.git
+git clone git@github.com:mm689/trove.git trove
 
 mv package-list.r package-list.trove-docker.r
 
