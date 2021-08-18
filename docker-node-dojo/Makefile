@@ -4,6 +4,8 @@ test:
 	nc -h 2>&1 | grep netcat
 	# Ensure mysql commands can be run
 	mysql --version | grep "for Linux"
+	# Test db-migrate node module
+	db-migrate --version | grep 0.11.12
 	# Test node itself can be run
 	yarn install --frozen-lockfile && node test.js
 	# Test newman was successfully installed
