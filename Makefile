@@ -5,10 +5,10 @@ IMAGE_NAME=${REPO_USERNAME}/$*:${IMAGE_TAG}
 
 # TOP-LEVEL RULES
 
-build: build-docker-node-base build-docker-tex-dojo build-docker-r-base
+build: build-docker-node-base build-docker-tex-dojo build-docker-r-base build-docker-composite
 	$(MAKE) build-docker-node-dojo build-docker-r-dojo
 
-push: push-docker-node-base build-docker-tex-dojo push-docker-r-base
+push: push-docker-node-base build-docker-tex-dojo push-docker-r-base push-docker-composite
 	$(MAKE) push-docker-node-dojo push-docker-r-dojo
 
 
