@@ -107,4 +107,7 @@ WORKDIR /home/circleci/project
 COPY docker-composite/fake_dojo.sh /usr/bin/dojo
 RUN chmod +x /usr/bin/dojo
 
+COPY docker-composite /home/circleci/test
+RUN chown -R circleci:circleci /home/circleci/test
+
 USER circleci

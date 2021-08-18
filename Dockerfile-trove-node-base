@@ -12,6 +12,8 @@ RUN apt-get update \
 		curl \
 		less \
 		make \
+		mysql-client \
+		netcat \
 		wget \
 	&& apt-get clean \
 	&& curl -L -o node.tar.gz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz" \

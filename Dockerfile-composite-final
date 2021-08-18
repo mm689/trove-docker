@@ -10,7 +10,7 @@ RUN export PACKAGES="aws=3.42.0 local=2.1.0 template=2.2.0 time=0.7.1" \
   && for packageversion in $PACKAGES; do \
     PACKAGE=${packageversion%%=*}; \
     VERSION=${packageversion#*=}; \
-    wget https://releases.hashicorp.com/terraform-provider-${PACKAGE}/${VERSION}/terraform-provider-${PACKAGE}_${VERSION}_linux_amd64.zip && \
+    wget --no-verbose https://releases.hashicorp.com/terraform-provider-${PACKAGE}/${VERSION}/terraform-provider-${PACKAGE}_${VERSION}_linux_amd64.zip && \
     unzip terraform-provider-${PACKAGE}_${VERSION}_linux_amd64.zip && \
     rm terraform-provider-${PACKAGE}_${VERSION}_linux_amd64.zip && \
     mkdir -p $TF_PLUGIN_CACHE_DIR/registry.terraform.io/hashicorp/${PACKAGE}/${VERSION}/linux_amd64 && \

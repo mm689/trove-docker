@@ -33,6 +33,9 @@ test-docker-r-base test-docker-trove-r-base: docker-trove-r-base.image.txt
 test-docker-r-dojo test-docker-trove-r-dojo: docker-trove-r-dojo.image.txt
 	dojo -image $(shell cat $<) docker-r-dojo/tests/test.r
 
+test-docker-node-base test-docker-trove-node-base: docker-trove-node-base.image.txt
+	dojo -image $(shell cat $<) bash -c "cd /dojo/work/docker-node-dojo && make test"
+
 test-docker-node-dojo test-docker-trove-node-dojo: docker-trove-node-dojo.image.txt
 	dojo -image $(shell cat $<) "cd docker-node-dojo && make test"
 
@@ -44,7 +47,7 @@ test-docker-composite-node: docker-composite.dojo.image.txt
 	dojo -image $(shell cat $<) "cd docker-node-dojo && make test"
 test-docker-composite-r: docker-composite.dojo.image.txt
 	dojo -image $(shell cat $<) docker-r-dojo/tests/test.r
-test-docker-composite-terraform: test-docker-composite-terraform-dojo test-docker-composite-terraform-circleci
+test-docker-composite-terraform: test-docker-composite-terraform-dojo test-docker-composite-circleci
 
 test-docker-composite-terraform-dojo: docker-composite.dojo.image.txt
 	rm -rf docker-composite/.terraform/
@@ -54,15 +57,20 @@ test-docker-composite-terraform-dojo: docker-composite.dojo.image.txt
 		(echo "Error: dojo image installed wrong number of terraform packages: $$installed" && exit 1)
 	@export preloaded=$$(grep "Using [a-z/]* v[0-9.]* from the shared cache directory" tf.dojo.log | wc -l) && [[ "$$preloaded" -eq 4 ]] || \
 		(echo "Error: dojo image preloaded wrong number of terraform packages: $$preloaded" && exit 1)
+	@echo "Success"
+	@rm -f tf.dojo.log
 
-test-docker-composite-terraform-circleci: docker-composite.circleci.image.txt
+test-docker-composite-circleci: docker-composite.circleci.image.txt
 	rm -rf docker-composite/.terraform/
-	docker run --rm -ti --name circleci-test -v $$(pwd):/home/circleci/project trovediary/trove-composite:circleci-$(IMAGE_TAG) bash -c "cd docker-composite && terraform init" | tee tf.circleci.log
+	docker run --rm -i --name circleci-test trovediary/trove-composite:circleci-$(IMAGE_TAG) bash -c "cd /home/circleci/test && make test" 2>&1 | tee tf.circleci.log
+	grep "Cloning into 'repo'" tf.circleci.log
 	@echo "Checking CircleCI image loads pre-installed terraform modules..."
 	@export installed=$$(grep "[Ii]nstalling" tf.circleci.log | wc -l) && [[ "$$installed" -eq 1 ]] || \
 		(echo "Error: circleci image installed wrong number of terraform packages: $$installed" && exit 1)
 	@export preloaded=$$(grep "Using [a-z/]* v[0-9.]* from the shared cache directory" tf.circleci.log | wc -l) && [[ "$$preloaded" -eq 4 ]] || \
 		(echo "Error: circleci image preloaded wrong number of terraform packages: $$preloaded" && exit 1)
+	@echo "Success"
+	@rm -f tf.circleci.log
 
 # IMAGE GENERATION
 
