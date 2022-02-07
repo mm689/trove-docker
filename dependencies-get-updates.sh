@@ -7,11 +7,11 @@ git clone git@github.com:mm689/trove.git trove
 
 mv package-list.r package-list.trove-docker.r
 
-# Don't track node.js packages: CircleCI caching renders them mostly bloat.
-#cd trove
+cd trove
+# No need to track node.js packages: CircleCI caching renders them mostly bloat.
 #make package-list.js
-#cp -p package-list.* ~-
-#cd ~-
+cp -p package-list.* ~-
+cd ~-
 
 # Check for any package names in package-list.extra.r
 new_packages=$(grep --fixed "c(" package-list.extra.r \
