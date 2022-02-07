@@ -29,4 +29,4 @@ RUN curl -L -o yarn.tar.gz "https://yarnpkg.com/downloads/${YARN_VERSION}/yarn-v
 	ln -s /opt/yarn-v${YARN_VERSION}/bin/yarn /usr/local/bin/yarn && \
 	ln -s /opt/yarn-v${YARN_VERSION}/bin/yarnpkg /usr/local/bin/yarnpkg
 
-RUN yarn global add newman@^5.2.4 db-migrate@^0.11.12 db-migrate-mysql@^2.1.2
+RUN yarn global add newman@^5.3.1 db-migrate@^0.11.13 db-migrate-mysql@^2.2.0
