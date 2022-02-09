@@ -21,6 +21,7 @@ RUN apt-get update \
 	\
 	&& export R_PACKAGE_VERSION=$(apt-cache policy r-base | grep -o "$R_BASE_VERSION[^ ]*") \
 	&& DEBIAN_FRONTEND="noninteractive" apt-get install -y --allow-downgrades \
+		cmake \
 		libcurl4-openssl-dev \
 		libfontconfig1-dev \
 		libmariadbclient-dev \
