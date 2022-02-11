@@ -22,13 +22,4 @@ WORKDIR /dojo/work
 ENTRYPOINT ["/tini", "-g", "--", "/usr/bin/entrypoint.sh"]
 CMD ["/bin/bash"]
 
-ENV DIARY_DB_HOSTNAME=db \
-	DIARY_DB_DATABASE=diary \
-	DIARY_DB_USERNAME=diary \
-	DIARY_DB_PASSWORD=secret \
-	DIARY_DB_SOURCE=fac_diary \
-	DIARY_DB_RAW_TABLE=entry_raw \
-	DIARY_DB_LEGACY_TABLE=entry_legacy \
-	DIARY_R_API_PORT=3041
-
 EXPOSE 3041

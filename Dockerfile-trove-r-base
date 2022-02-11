@@ -42,7 +42,9 @@ COPY package-*.r /usr/src/
 RUN cd /usr/src \
 	&& chmod +x package-install.r \
 	&& ./package-install.r 2>&1 \
-	| grep -B 15 -A 10 -E "Status:|also installing|Error|ERROR|DONE"
+	| grep -B 30 -A 20 -E "Status:|also installing|Error|ERROR|DONE"
+
+ENV TZ=UTC
 
 COPY docker-r-dojo/tests/test.r docker-r-dojo/tests/test.r
 
