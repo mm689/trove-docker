@@ -1,15 +1,16 @@
-ARG BASE_IMAGE=ubuntu:20.04
-FROM $BASE_IMAGE
+ARG BASE_IMAGE=ubuntu:22.04
+FROM --platform=linux/x86_64 $BASE_IMAGE
 
 # This file installs node.js, and a load of packages, on a base Ubuntu image.
 
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
 
-ENV NODE_VERSION 16.14.0
+ENV NODE_VERSION 18.13.0
 RUN apt-get update \
 	&& apt-get install --no-install-recommends -y \
 		ca-certificates \
 		curl \
+		graphviz \
 		less \
 		make \
 		mysql-client \
@@ -22,7 +23,7 @@ RUN apt-get update \
 	&& ln -s /usr/local/bin/node /usr/local/bin/nodejs
 
 # Install yarn
-ENV YARN_VERSION 1.22.17
+ENV YARN_VERSION 1.22.19
 RUN curl -L -o yarn.tar.gz "https://yarnpkg.com/downloads/${YARN_VERSION}/yarn-v${YARN_VERSION}.tar.gz" && \
 	tar -xzf yarn.tar.gz -C /opt/ && \
 	rm yarn.tar.gz && \
@@ -30,4 +31,7 @@ RUN curl -L -o yarn.tar.gz "https://yarnpkg.com/downloads/${YARN_VERSION}/yarn-v
 	ln -s /opt/yarn-v${YARN_VERSION}/bin/yarnpkg /usr/local/bin/yarnpkg
 
 # Preinstall packages whose binaries need to be accessible from the terminal
-RUN yarn global add newman@^5.3.1 db-migrate@^0.11.13 db-migrate-mysql@^2.2.0
+RUN yarn global add \
+	db-migrate@^0.11.13 \
+	db-migrate-mysql@^2.2.0 \
+	newman@^5.3.2

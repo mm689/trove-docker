@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "ansi-regex": "^4.1.0"
+    "ansi-regex": "^4.1.0",
+    "graphviz": "^0.0.9"
   }
 }
