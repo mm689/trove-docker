@@ -12,12 +12,18 @@ pipelines:
       - build-base:
           clean_workspace: true
           jobs:
-            r:
+            r-base:
               tasks:
                - exec:
                    command: make
                    arguments:
                    - push-docker-r-base
+            r-lambda:
+              tasks:
+               - exec:
+                   command: make
+                   arguments:
+                   - push-docker-r-lambda
             node:
               tasks:
                - exec:
@@ -70,6 +76,12 @@ pipelines:
                    command: make
                    arguments:
                     - "test-docker-r-base"
+            r-lambda:
+              tasks:
+               - exec:
+                   command: make
+                   arguments:
+                    - "test-docker-r-lambda"
             r-dojo:
               tasks:
                - exec:

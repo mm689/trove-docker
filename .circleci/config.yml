@@ -20,6 +20,13 @@ workflows:
           requires:
             - build-r-dojo
 
+      - build-r-lambda:
+          requires:
+            - allow-commit
+      - test-r-lambda:
+          requires:
+            - build-r-lambda
+
       - build-node-base:
           requires:
             - allow-commit
@@ -50,6 +57,7 @@ workflows:
       - update-trove:
           requires:
             - test-r-dojo
+            - test-r-lambda
             - test-node-dojo
             - test-composite
             - test-tex-dojo
@@ -82,6 +90,17 @@ jobs:
     steps:
       - test-docker-image:
           image: r-dojo
+
+  build-r-lambda:
+    executor: trove-docker
+    steps:
+      - push-docker-image:
+          image: r-lambda
+  test-r-lambda:
+    executor: trove-machine
+    steps:
+      - test-docker-image:
+          image: r-lambda
 
   build-node-base:
     executor: trove-docker
@@ -153,7 +172,7 @@ commands:
     steps:
       - checkout
       - setup_remote_docker:
-          version: 20.10.6
+          version: 20.10.18
       - run:
           command: make push-docker-<< parameters.image >>
 
@@ -189,8 +208,8 @@ commands:
 executors:
   trove-docker:
     docker:
-      - image: cimg/base:2021.07
+      - image: cimg/base:2023.02
 
   trove-machine:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2204:2023.02.1

@@ -17,11 +17,13 @@ push: push-docker-node-base build-docker-tex-dojo push-docker-r-base push-docker
 build-docker-node-base docker-build-node-base:
 build-docker-node-dojo docker-build-node-dojo:
 build-docker-r-base docker-build-r-base:
+build-docker-r-lambda docker-build-r-lambda:
 build-docker-r-dojo docker-build-r-dojo:
 build-docker-tex-dojo docker-build-tex-dojo:
 push-docker-node-base docker-push-node-base:
 push-docker-node-dojo docker-push-node-dojo:
 push-docker-r-base docker-push-r-base:
+push-docker-r-lambda docker-push-r-lambda:
 push-docker-r-dojo docker-push-r-dojo:
 push-docker-tex-dojo docker-push-tex-dojo:
 
@@ -32,6 +34,9 @@ test-docker-r-base test-docker-trove-r-base: docker-trove-r-base.image.txt
 
 test-docker-r-dojo test-docker-trove-r-dojo: docker-trove-r-dojo.image.txt
 	dojo -image $(shell cat $<) docker-r-dojo/tests/test.r
+
+test-docker-r-lambda test-docker-trove-r-lambda: docker-trove-r-lambda.image.txt
+	dojo -image $(shell cat $<) --docker-options "-w /dojo/work --entrypoint Rscript" docker-r-dojo/tests/test.r
 
 test-docker-node-base test-docker-trove-node-base: docker-trove-node-base.image.txt
 	dojo -image $(shell cat $<) --docker-options "-w /dojo/work/docker-node-dojo" make test
@@ -91,7 +96,7 @@ build-docker-% docker-build-%: Dockerfile-%
 	echo ${IMAGE_NAME} >docker-$*.image.txt
 
 build-docker-composite docker-build-composite:
-	docker build -f Dockerfile-trove-r-base -t $(REPO_USERNAME)/trove-composite:r-base-$(IMAGE_TAG) --build-arg BASE_IMAGE=ubuntu:20.04 .
+	docker build -f Dockerfile-trove-r-base -t $(REPO_USERNAME)/trove-composite:r-base-$(IMAGE_TAG) .
 	docker build -f Dockerfile-trove-node-base -t $(REPO_USERNAME)/trove-composite:node-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:r-base-$(IMAGE_TAG) .
 	docker build -f Dockerfile-composite-misc -t $(REPO_USERNAME)/trove-composite:misc-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:node-$(IMAGE_TAG) .
 	docker build -f Dockerfile-trove-r-dojo -t $(REPO_USERNAME)/trove-composite:pre-dojo-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:misc-$(IMAGE_TAG) .

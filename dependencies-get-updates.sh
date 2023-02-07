@@ -11,6 +11,7 @@ cd trove
 # No need to track node.js packages: CircleCI caching renders them mostly bloat.
 #make package-list.js
 cp -p package-list.* ~-
+cp r_api/package-list.r ~-/package-list.lambda.r
 cd ~-
 
 # Check for any package names in package-list.extra.r
@@ -45,9 +46,9 @@ else
 fi
 
 # Tidy up a bit.
-rm -f package-list.*.r
+rm -f package-list.extra.r
 git reset
-git add package-list.*
+git add package-list*.r
 if [ -z "$(git diff --cached)" ]; then
   echo "No changes to package lists detected" >&2
   exit 1

@@ -2,6 +2,7 @@
 node_modules/
 diary/
 trove/
+repo/
 
 docker-tex-dojo/*.*
 !docker-tex-dojo/*.sh

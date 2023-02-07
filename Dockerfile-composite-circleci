@@ -55,7 +55,7 @@ RUN apt-get update && apt-get install -y \
 		# for ssh-enabled builds
 		nano \
 		net-tools \
-		netcat \
+		netcat-traditional \
 		openssh-client \
 		parallel \
 		# compiling tool
@@ -72,9 +72,9 @@ RUN apt-get update && apt-get install -y \
 		zip && \
 	rm -rf /var/lib/apt/lists/*
 
-
 # Install Docker - needs the setup_remote_docker CircleCI step to work
-ENV DOCKER_VERSION 5:20.10.7~3-0~ubuntu-
+# NB to find an updated version, use `apt-cache madison docker-ce`
+ENV DOCKER_VERSION 5:23.0.1-1~ubuntu.22.10~kinetic
 RUN apt-get update && apt-get install -y \
 		apt-transport-https \
 		ca-certificates \
@@ -83,7 +83,7 @@ RUN apt-get update && apt-get install -y \
 		software-properties-common && \
 	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
 	add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
-	apt-get install -y docker-ce=${DOCKER_VERSION}$(lsb_release -cs) docker-ce-cli=${DOCKER_VERSION}$(lsb_release -cs) containerd.io && \
+	apt-get install -y docker-ce-cli=${DOCKER_VERSION} docker-ce-cli=${DOCKER_VERSION} containerd.io && \
 	# Quick test of the Docker install
 	docker --version && \
 	rm -rf /var/lib/apt/lists/*

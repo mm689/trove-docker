@@ -1,0 +1,32 @@
+FROM amazon/aws-lambda-provided:al2.2023.01.11.06
+
+ENV R_VERSION=4.2.2
+
+RUN yum -y install \
+	git \
+	tar \
+	wget \
+	&& yum clean all
+
+RUN yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
+  && wget https://cdn.rstudio.com/r/centos-7/pkgs/R-${R_VERSION}-1-1.x86_64.rpm \
+  && yum -y install R-${R_VERSION}-1-1.x86_64.rpm \
+  && rm R-${R_VERSION}-1-1.x86_64.rpm
+
+ENV PATH="${PATH}:/opt/R/${R_VERSION}/bin/"
+
+# System requirements for R packages
+RUN yum -y install \
+  fontconfig-devel \
+  mariadb-devel \
+  openssl-devel \
+  && yum clean all
+
+WORKDIR /lambda/
+
+ENV TZ=UTC
+
+COPY ./package-list.lambda.r ./package-install.r /lambda/
+RUN	mv package-list.lambda.r package-list.r \
+	&& Rscript ./package-install.r 2>&1 \
+	| grep -B 30 -A 20 -E "Status:|also installing|Error|ERROR|DONE"
