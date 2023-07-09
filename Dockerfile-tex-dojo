@@ -4,23 +4,32 @@ ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 
-# Install common Dojo scripts
-ENV DOJO_VERSION=0.10.3
-RUN apt-get update && \
-  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-  sudo git ca-certificates && \
-  git clone --depth 1 -b ${DOJO_VERSION} https://github.com/kudulab/dojo.git /tmp/dojo_git &&\
-  /tmp/dojo_git/image_scripts/src/install.sh && \
-  rm -r /tmp/dojo_git
+# Install packages and Dojo scripts
+ENV DOJO_VERSION=0.11.0
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    make \
+    poppler-utils \
+    sudo \
+  && apt-get clean \
+  && git clone --depth 1 -b ${DOJO_VERSION} https://github.com/kudulab/dojo.git /tmp/dojo_git \
+  && /tmp/dojo_git/image_scripts/src/install.sh \
+  && rm -r /tmp/dojo_git
 
-RUN apt-get update &&\
-	apt-get install -y --no-install-recommends \
-		make poppler-utils && \
-	apt-get clean
+COPY docker-tex-dojo/wordcount /usr/bin/
 
-# COPY package-*.r /usr/src/
-# RUN chmod +x /usr/src/package-install.r
-# RUN cd /usr/src && ./package-install.r
+ENV TEXCOUNT_VERSION=3_2_0_41 \
+    LC_CTYPE=C \
+    LC_ALL=C \
+    LANG=C
+RUN curl https://app.uio.no/ifi/texcount/download.php?file=texcount_${TEXCOUNT_VERSION}.zip -o texcount.zip \
+    && unzip texcount.zip -d texcount \
+    && mv texcount/texcount.pl /usr/bin/ \
+    && rm -rf texcount/ \
+    && chmod +x /usr/bin/wordcount /usr/bin/texcount.pl
 
 WORKDIR /dojo/work
 

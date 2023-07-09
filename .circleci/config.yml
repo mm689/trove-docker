@@ -192,7 +192,7 @@ commands:
       - run:
           name: Install dojo
           command: |
-            version="0.10.3"
+            version="0.11.0"
             wget -O /tmp/dojo https://github.com/kudulab/dojo/releases/download/${version}/dojo_linux_amd64
             chmod +x /tmp/dojo
             sudo mv /tmp/dojo /usr/bin/dojo

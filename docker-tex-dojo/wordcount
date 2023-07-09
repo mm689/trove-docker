@@ -1,0 +1,31 @@
+#!/bin/bash
+set -o errexit
+
+# This script wraps texcount.pl to return a total word count for the given file(s).
+# It's intended as a simple wrapper so the underlying tool can be swapped out if desired.
+# If more control is needed, you can also simply directly call `texcount.pl`.
+
+usage() {
+    echo "Usage: $0 [--total|--raw|--texcount] files" >&2
+    exit 1
+}
+
+flag=
+if [[ $1 == "--"* ]]; then
+    flag=$1
+    shift
+fi
+
+if [[ $# -lt 1 ]]; then
+    usage
+fi
+
+texcount=$(texcount.pl -merge -brief $@)
+
+if [[ -z "$flag" ]] || [[ $flag == "--total" ]]; then
+    eval "echo $(( $(echo "$texcount" | cut -d' ' -f1) ))"
+elif [[ "$flag" == "--raw" ]] || [[ "$flag" == "--texcount" ]]; then
+    echo "$texcount"
+else
+    usage
+fi
