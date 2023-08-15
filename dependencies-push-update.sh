@@ -3,7 +3,7 @@
 # Store in the dependent repository an upgraded commit's tag
 
 rm -rf trove
-git clone git@github.com:mm689/trove.git trove
+git clone --depth 1 git@github.com:mm689/trove.git trove
 
 CURRENT_COMMIT=$(git rev-parse HEAD)
 
@@ -17,7 +17,7 @@ for f in dkr/* .circleci/config.yml; do
   # NB for loop is necessary as 'sed -i' behaviour varies between Linux and OSX
   mv $f $f.bak
   sed -E \
-  "s~(trovediary/((diary|trove)-)?(node-dojo|r-base|r-dojo|tex-dojo|composite)):([a-z]+-)?([a-f0-9]{40})~\1:\5$CURRENT_COMMIT~g" \
+  "s~(trovediary/((diary|trove)-)?[a-z-]+):([a-z]+-)?([a-f0-9]{40})~\1:\4$CURRENT_COMMIT~g" \
   $f.bak >$f
   rm $f.bak
 done
@@ -41,5 +41,9 @@ rm package-list.orig.r package-list.extra.orig.r package-list.new.r
 # Make the commit
 git add .
 git commit -m "[Automatic] Upgrading versions of docker images"
+
+if [[ "$1" == "--ci" ]]; then
+    git push origin
+fi
 
 cd ~-

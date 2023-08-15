@@ -121,7 +121,7 @@ pipelines:
                - exec:
                    command: make
                    arguments:
-                    - "gocd-dependencies-push-update"
+                    - "dependencies-push-update-ci"
 
   trove-docker-update:
     group: trove
@@ -143,4 +143,4 @@ pipelines:
            - exec:
                command: make
                arguments:
-                - gocd-dependencies-get-updates
+                - dependencies-get-updates-ci

@@ -139,13 +139,11 @@ push-docker-% docker-push-%: build-docker-% login-dockerhub
 dependencies-get-updates dependencies-push-update:
 	./$@.sh
 
-gocd-dependencies-get-updates:
-	@$(MAKE) --no-print-directory dependencies-get-updates
-	git push origin master
+dependencies-get-updates-ci:
+	./dependencies-get-updates.sh --ci
 
-gocd-dependencies-push-update:
-	@$(MAKE) --no-print-directory dependencies-push-update
-	cd trove && git push origin master
+dependencies-push-update-ci:
+	./dependencies-push-update.sh --ci
 
 
 # AUTHENTICATION

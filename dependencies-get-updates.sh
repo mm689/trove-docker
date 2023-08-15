@@ -3,23 +3,31 @@
 # Check for any updates to package lists.
 
 rm -rf trove
-git clone git@github.com:mm689/trove.git trove
+git clone --depth 1 git@github.com:mm689/trove.git trove
 
-mv package-list.r package-list.trove-docker.r
+# Retrieve package-list.r from the trove repo (with comments from this repo).
+cp -p package-list.r package-list.trove-docker.r
+head -n $(grep -n "^#" package-list.trove-docker.r | tail -1 | cut -d: -f1) package-list.trove-docker.r >package-list.r
+tail -n +$(($(grep -n "^#" trove/package-list.r | tail -1 | cut -d: -f1) + 1)) trove/package-list.r >>package-list.r
 
 cd trove
 # No need to track node.js packages: CircleCI caching renders them mostly bloat.
 #make package-list.js
-cp -p package-list.* ~-
-cp r_api/package-list.r ~-/package-list.lambda.r
+cp -p package-list.extra.r ~-
+cp -p r_api/package-list.r ~-/package-list.lambda.r
 cd ~-
 
 # Check for any package names in package-list.extra.r
 new_packages=$(grep --fixed "c(" package-list.extra.r \
   | sed -E "s/.*c[(](.*)[)]/\1/" || true)
 
-# If there are new packages, move them over to package-list.r
-if [ ! -z "$new_packages" ]; then
+if [ -n "$new_packages" ] && ! diff package-list.r package-list.trove-docker.r >/dev/null; then
+    echo "Error: packages modified in both trove:package-list.r and trove:package-list.extra.r" >&2
+    exit 1
+fi
+
+# If there are new packages in package-list.extra.r, move them over to package-list.r
+if [ -n "$new_packages" ]; then
 
   # Extract the existing package list from the package-list.r file
   package_list_start=$(grep --fixed -n " c(" package-list.r | cut -d: -f1)
@@ -41,17 +49,15 @@ if [ ! -z "$new_packages" ]; then
   echo "$package_list" >>package-list.r
   tail -n +$(( $package_list_end + 1 )) package-list.trove-docker.r >>package-list.r
 
-else
-  mv package-list.trove-docker.r package-list.r
 fi
 
 # Tidy up a bit.
-rm -f package-list.extra.r
+rm -f package-list.extra.r package-list.trove-docker.r package-list.orig.r
 git reset
 git add package-list*.r
 if [ -z "$(git diff --cached)" ]; then
   echo "No changes to package lists detected" >&2
-  exit 1
+  exit 0
 fi
 
 # Generate and apply a pretty commit message.
@@ -67,3 +73,16 @@ plural=$(git diff --cached --name-only | tail -n +2)
 plural=$(echo "$plural" | grep . >/dev/null && echo "s" || echo "")
 # Commit.
 git commit -m "[Automatic] Updated $extensions package list$plural"
+
+if [[ "$1" == "--ci" ]]; then
+    if [[ -n "$GIT_IDENTITY_TROVE_DOCKER" ]]; then
+        # CircleCI needs creative SSHing to be able to push to and pull from both trove-docker and trove.
+        ssh-agent bash -c "ssh-add $GIT_IDENTITY_TROVE_DOCKER && git push origin"
+    else
+        git push origin
+    fi
+    echo "**********" >&2
+    echo "Changes were made. Failing this pipeline in favour of the one triggered by them." >&2
+    echo "**********" >&2
+    exit 1
+fi
