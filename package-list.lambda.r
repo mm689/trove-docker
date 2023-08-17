@@ -2,6 +2,7 @@
 
 list.of.packages <- c(
     "base64enc", # returning binary data from Lambda to API Gateway
+    "aws.signature", # retrieving database connection params
     "DBI",       # some query-related interpolation functions
     "jsonlite",  # encoding and decoding JSON
     "ggplot2",   # graphs
