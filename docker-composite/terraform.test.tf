@@ -1,13 +1,13 @@
 
 terraform {
-  required_version = "1.2.3"
+  required_version = "1.5.6"
 
   required_providers {
     aws = {
-      version = "4.24.0"
+      version = "5.14.0"
     }
     local = {
-      version = "2.1.0"
+      version = "2.4.0"
     }
     null = {
       # Not pre-installed: this alone should cause an install
@@ -17,7 +17,7 @@ terraform {
       version = "2.2.0"
     }
     time = {
-      version = "0.7.1"
+      version = "0.9.1"
     }
   }
 }

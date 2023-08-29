@@ -6,7 +6,7 @@ ARG USERNAME='dojo'
 
 # Preinstall terraform plugins
 ENV TF_PLUGIN_CACHE_DIR="/home/${USERNAME}/.terraform.d/plugins-cache"
-RUN export PACKAGES="aws=4.24.0 local=2.1.0 external=2.1.0 template=2.2.0 time=0.7.1" \
+RUN export PACKAGES="aws=5.14.0 local=2.4.0 external=2.1.0 template=2.2.0 time=0.9.1" \
   && for packageversion in $PACKAGES; do \
     PACKAGE=${packageversion%%=*}; \
     VERSION=${packageversion#*=}; \

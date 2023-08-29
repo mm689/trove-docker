@@ -7,14 +7,15 @@ FROM $BASE_IMAGE
 RUN (curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -) && \
   apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
 
+ENV AWS_CLI_VERSION=2.13.12
 RUN cd /tmp/ \
-  && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.0.30.zip" -o "awscliv2.zip" \
+  && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWS_CLI_VERSION}.zip" -o "awscliv2.zip" \
   && unzip -q awscliv2.zip \
   && ./aws/install \
   && rm -rf ./aws
 
 # repository packages
-ENV TERRAFORM_VERSION=1.2.3
+ENV TERRAFORM_VERSION=1.5.6-1
 ENV ANSIBLE_VERSION=5.5.0-1
 RUN apt-get update && \
   apt-get install --no-install-recommends -y \

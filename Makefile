@@ -57,25 +57,23 @@ test-docker-composite-terraform: test-docker-composite-terraform-dojo test-docke
 test-docker-composite-terraform-dojo: docker-composite.dojo.image.txt
 	rm -rf docker-composite/.terraform/
 	dojo -image $(shell cat $<) "cd docker-composite && terraform init" | tee tf.dojo.log
-	@echo "Checking Dojo image loads pre-installed terraform modules..."
-	@export installed=$$(grep "[Ii]nstalling" tf.dojo.log | wc -l) && [[ "$$installed" -eq 1 ]] || \
-		(echo "Error: dojo image installed wrong number of terraform packages: $$installed" && exit 1)
-	@export preloaded=$$(grep "Using [a-z/]* v[0-9.]* from the shared cache directory" tf.dojo.log | wc -l) && [[ "$$preloaded" -eq 4 ]] || \
-		(echo "Error: dojo image preloaded wrong number of terraform packages: $$preloaded" && exit 1)
-	@echo "Success"
-	@rm -f tf.dojo.log
+	@$(MAKE) -s test-docker-composite-terraform-check-dojo
 
 test-docker-composite-circleci: docker-composite.circleci.image.txt
 	rm -rf docker-composite/.terraform/
 	docker run --rm -i --name circleci-test trovediary/trove-composite:circleci-$(IMAGE_TAG) bash -c "cd /home/circleci/test && make test" 2>&1 | tee tf.circleci.log
 	grep "Cloning into 'repo'" tf.circleci.log
-	@echo "Checking CircleCI image loads pre-installed terraform modules..."
-	@export installed=$$(grep "[Ii]nstalling" tf.circleci.log | wc -l) && [[ "$$installed" -eq 1 ]] || \
-		(echo "Error: circleci image installed wrong number of terraform packages: $$installed" && exit 1)
-	@export preloaded=$$(grep "Using [a-z/]* v[0-9.]* from the shared cache directory" tf.circleci.log | wc -l) && [[ "$$preloaded" -eq 4 ]] || \
-		(echo "Error: circleci image preloaded wrong number of terraform packages: $$preloaded" && exit 1)
+	@$(MAKE) -s test-docker-composite-terraform-check-circleci
+
+test-docker-composite-terraform-check-%: tf.%.log
+	@# NB this should be run from the above rules, not directly.
+	@echo "Checking $* image loads pre-installed terraform modules..."
+	@export installed=$$(grep "[Ii]nstalling" $< | wc -l) && [[ "$$installed" -eq 1 ]] || \
+		(echo "Error: $* image installed wrong number of terraform packages: $$installed" && exit 1)
+	@export preloaded=$$(grep "Using [a-z/]* v[0-9.]* from the shared cache directory" $< | wc -l) && [[ "$$preloaded" -eq 4 ]] || \
+		(echo "Error: $* image preloaded wrong number of terraform packages: $$preloaded" && exit 1)
 	@echo "Success"
-	@rm -f tf.circleci.log
+	@rm -f $<
 
 # IMAGE GENERATION
 
