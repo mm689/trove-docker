@@ -6,12 +6,8 @@ workflows:
     jobs:
       - check-for-updates
 
-      - allow-commit:
-          type: approval
-
       - build-r-base:
           requires:
-            - allow-commit
             - check-for-updates
       - test-r-base:
           requires:
@@ -25,7 +21,6 @@ workflows:
 
       - build-r-lambda:
           requires:
-            - allow-commit
             - check-for-updates
       - test-r-lambda:
           requires:
@@ -33,7 +28,6 @@ workflows:
 
       - build-node-base:
           requires:
-            - allow-commit
             - check-for-updates
       - test-node-base:
           requires:
@@ -47,7 +41,6 @@ workflows:
 
       - build-composite:
           requires:
-            - allow-commit
             - check-for-updates
       - test-composite:
           requires:
@@ -55,7 +48,6 @@ workflows:
 
       - build-tex-dojo:
           requires:
-            - allow-commit
             - check-for-updates
       - test-tex-dojo:
           requires:
