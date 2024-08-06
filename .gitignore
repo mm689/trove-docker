@@ -9,3 +9,4 @@ docker-tex-dojo/*.*
 !docker-tex-dojo/*.tex
 .terraform
 *.log
+test-output.*

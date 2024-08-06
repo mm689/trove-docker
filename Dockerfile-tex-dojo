@@ -1,4 +1,4 @@
-FROM ubuntu:jammy
+FROM --platform=linux/x86_64 ubuntu:jammy
 ENV DEBIAN_FRONTEND noninteractive
 
 # Based on https://github.com/blang/latex-docker/blob/master/Dockerfile.ubuntu
@@ -15,7 +15,7 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 
 # Install packages and Dojo scripts
-ENV DOJO_VERSION=0.11.0
+ENV DOJO_VERSION=0.13.0
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates \

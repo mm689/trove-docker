@@ -1,5 +1,5 @@
 ARG BASE_IMAGE_TAG=latest
-FROM trovediary/trove-node-base:$BASE_IMAGE_TAG
+FROM --platform=linux/x86_64 trovediary/trove-node-base:$BASE_IMAGE_TAG
 
 # Note: this image is not currently used in the composite image.
 # It merely installs dojo on a base.
@@ -9,7 +9,7 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin
 RUN chmod +x /sbin/tini
 
 # Install common Dojo scripts
-ENV DOJO_VERSION=0.11.0
+ENV DOJO_VERSION=0.13.0
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo git ca-certificates && \
   git clone --depth 1 -b ${DOJO_VERSION} https://github.com/kudulab/dojo.git /tmp/dojo_git &&\
@@ -17,6 +17,8 @@ RUN apt-get update && \
   rm -r /tmp/dojo_git && \
   echo 'dojo ALL=(ALL) NOPASSWD: ALL' >>/etc/sudoers
 
+# Trust whatever's mounted into the image
+RUN git config --global --add safe.directory '*'
 WORKDIR /dojo/work
 
 ENTRYPOINT ["/sbin/tini", "-g", "--", "/usr/bin/entrypoint.sh"]

@@ -1,6 +1,6 @@
 ARG BASE_IMAGE_TAG=latest
 ARG BASE_IMAGE=trovediary/trove-r-base:$BASE_IMAGE_TAG
-FROM $BASE_IMAGE
+FROM --platform=linux/x86_64 $BASE_IMAGE
 
 # Adds Dojo to the base R image, plus some default config.
 
@@ -9,7 +9,7 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin
 RUN chmod +x /sbin/tini
 
 # Install common Dojo scripts
-ENV DOJO_VERSION=0.11.0
+ENV DOJO_VERSION=0.13.0
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo git ca-certificates && \
   git clone --depth 1 -b ${DOJO_VERSION} https://github.com/kudulab/dojo.git /tmp/dojo_git &&\
@@ -17,9 +17,12 @@ RUN apt-get update && \
   rm -r /tmp/dojo_git && \
   echo 'dojo ALL=(ALL) NOPASSWD: ALL' >>/etc/sudoers
 
+# Trust whatever's mounted into the image
+RUN git config --global --add safe.directory '*'
 WORKDIR /dojo/work
 
-ENTRYPOINT ["/tini", "-g", "--", "/usr/bin/entrypoint.sh"]
+ENTRYPOINT ["/sbin/tini", "-g", "--", "/usr/bin/entrypoint.sh"]
+
 CMD ["/bin/bash"]
 
 EXPOSE 3041

@@ -38,3 +38,19 @@ To retrieve updates to the list of R packages to pre-install:
 
 To commit updated package lists and docker image tags to the main [Trove](https://github.com/mm689/trove) repository:
 - `make dependencies-push-updates`
+
+
+## Notes on updates
+
+### Terraform plugin caching
+
+`terraform` is somewhat picky when it comes to using plugins from the shared plugin cache. It is likely to be necessary to do the following in order to ensure these are used with an updated image:
+
+1. Build the image containing Terraform, e.g. with `make docker-build-composite`
+1. Delete the relevant [`.terraform.lock.hcl`](docker-composite/.terraform.lock.hcl) file entirely
+1. Comment out the `null` provider section of [`terraform.test.tf`](docker-composite/terraform.test.tf)
+1. Run `make test-docker-composite` to generate a `.terraform.lock.hcl` with hashes based on the Docker-installed plugin versions
+1. Uncomment the `null` provider section of [`terraform.test.tf`](docker-composite/terraform.test.tf)
+1. (Optional) Run `make terraform-update-lockfile` to generate other hashes.
+    - These hashes are only relevant when running `terraform` outside this Docker image, e.g. in other projects
+1. Copy the `.terraform.lock.hcl` file - or any relevant provider portions of it - to any projects this Docker image is to be used for.

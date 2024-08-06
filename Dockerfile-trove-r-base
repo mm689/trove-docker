@@ -1,5 +1,5 @@
-ARG BASE_IMAGE=ubuntu:22.10
-FROM $BASE_IMAGE
+ARG BASE_IMAGE=ubuntu:22.04
+FROM --platform=linux/x86_64 $BASE_IMAGE
 
 # Installs R and relevant R packages on a base Ubuntu image.
 
@@ -10,28 +10,38 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 
 # Install R and packages required for it and its packages' installation
-ENV R_BASE_VERSION 4.2.1
 RUN apt-get update \
-	&& apt-get install -y \
+	&& apt-get install -y --no-install-recommends \
 		software-properties-common \
 		wget \
+    && apt-get clean
+
+ENV R_BASE_VERSION 4.4.
+RUN wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc \
+    && add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" \
 	\
-	&& wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc \
-	\
-	&& export R_PACKAGE_VERSION=$(apt-cache policy r-base | grep -o "$R_BASE_VERSION[^ ]*" -m 1) \
+	&& export R_PACKAGE_VERSION=$(apt-cache policy r-base | grep -o "${R_BASE_VERSION//./\.}[^ ]*" -m 1) \
+    && ([ -n "$R_PACKAGE_VERSION" ] || (echo "No R package version found matching ${R_BASE_VERSION}. Available:" >&2 && apt-cache policy r-base >&2 && false)) \
 	&& DEBIAN_FRONTEND="noninteractive" \
 	apt-get install -y --allow-downgrades \
 		cmake \
 		libcurl4-openssl-dev \
 		libfontconfig1-dev \
+		# package textshaping (for tidyverse)
 		libfreetype6-dev \
+		# package ragg (for tidyverse)
 		libfribidi-dev \
+		# package ragg (for tidyverse)
 		libharfbuzz-dev \
+		# package textshaping (for tidyverse)
 		libjpeg-dev \
+		# package RMariaDB
 		libmariadb-dev \
+		# package textshaping (for tidyverse)
 		libpng-dev \
 		libsodium-dev \
 		libssl-dev \
+		# package textshaping (for tidyverse)
 		libtiff5-dev \
 		libxml2-dev \
 		mysql-client \
@@ -43,13 +53,6 @@ RUN apt-get update \
 		r-recommended=$R_PACKAGE_VERSION \
 		ssh-client \
 	&& apt-get clean
-	# libfreetype6-dev      # package textshaping (for tidyverse)
-	# libfribidi-dev        # package ragg (for tidyverse)
-	# libharfbuzz-dev       # package ragg (for tidyverse)
-	# libjpeg-dev           # package textshaping (for tidyverse)
-	# libmariadb-dev        # package RMariaDB
-	# libpng-dev            # package textshaping (for tidyverse)
-	# libtiff5-dev          # package textshaping (for tidyverse)
 
 # Install all R packages
 COPY package-*.r /usr/src/

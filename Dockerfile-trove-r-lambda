@@ -1,32 +1,76 @@
-FROM amazon/aws-lambda-provided:al2.2023.01.11.06
+FROM amazon/aws-lambda-provided:al2.2024.08.06.14
 
-ENV R_VERSION=4.2.2
+# Based on https://cran.r-project.org/doc/manuals/R-admin.html#Installation
 
-RUN yum -y install \
-	git \
+# NB in case of a missing file error, consider `yum whatprovides '*/<filename>'
+
+SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
+
+RUN echo "Installing general project requirements..." \
+&& yum install -y \
+    git \
 	tar \
-	wget \
-	&& yum clean all
+	wget
 
-RUN yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
-  && wget https://cdn.rstudio.com/r/centos-7/pkgs/R-${R_VERSION}-1-1.x86_64.rpm \
-  && yum -y install R-${R_VERSION}-1-1.x86_64.rpm \
-  && rm R-${R_VERSION}-1-1.x86_64.rpm
+ENV R_VERSION=4.4.1
+RUN echo "Downloading R installation package..." \
+&& wget https://cran.r-project.org/src/base/R-4/R-${R_VERSION}.tar.gz -O /tmp/R.tar.gz \
+\
+&& echo "Installing packages required to compile R..." \
+&& yum install -y \
+    bzip2-devel \
+    # C and C++ compilation
+    clang \
+    curl-devel \
+    # Fortran compilation
+    gcc-gfortran \
+    # libjpeg and libXmu are needed for generated JPEGs
+    # libX11, libXt and pango are needed for generating PNGs
+    libjpeg-turbo-devel \
+    libX11-devel \
+    libXt-devel \
+    make \
+    pango-devel \
+    pcre2-devel \
+    readline-devel \
+    which \
+    xz-devel \
+    zlib-devel \
+\
+&& echo "Installing R..." \
+&& tar -xvf /tmp/R.tar.gz -C /usr/local/ \
+&& (cd /usr/local/R-${R_VERSION} && ./configure && make) \
+&& ln -s /usr/local/R-${R_VERSION}/bin/R /usr/local/bin/R \
+&& ln -s /usr/local/R-${R_VERSION}/bin/Rscript /usr/local/bin/Rscript \
+\
+&& echo "Validating R installation..." \
+&& R --version \
+&& (cd /usr/local/R-${R_VERSION} && make check) \
+\
+&& echo "Tidying up..." \
+&& rm -rf /tmp/R.tar.gz \
+&& yum clean all \
+&& rm -rf /var/cache/yum
 
-ENV PATH="${PATH}:/opt/R/${R_VERSION}/bin/"
-
-# System requirements for R packages
-RUN yum -y install \
-  fontconfig-devel \
-  mariadb-devel \
-  openssl-devel \
-  && yum clean all
+# NB MySQL yum repo added per instructions at:
+#  https://github.com/r-dbi/RMariaDB?tab=readme-ov-file#mysql-client-library
+RUN echo "Installing packages required for specific R packages" \
+&& wget https://dev.mysql.com/get/mysql84-community-release-el$(rpm -E %{rhel})-1.noarch.rpm -O /tmp/mysql-repo.rpm \
+&& yum localinstall -y /tmp/mysql-repo.rpm \
+&& rm /tmp/mysql-repo.rpm \
+&& yum install -y \
+    fontconfig-devel \
+    mysql-devel \
+    mariadb-devel \
+    openssl-devel \
+&& yum clean all \
+&& rm -rf /var/cache/yum
 
 WORKDIR /lambda/
 
-ENV TZ=UTC
-
 COPY ./package-list.lambda.r ./package-install.r /lambda/
 RUN	mv package-list.lambda.r package-list.r \
-	&& Rscript ./package-install.r 2>&1 \
-	| grep -B 30 -A 20 -E "Status:|also installing|Error|ERROR|DONE"
+    && Rscript ./package-install.r 2>&1 \
+    | grep -B 30 -A 20 -E "Status:|also installing|Error|ERROR|DONE"
+
+ENV TZ=UTC

@@ -1,13 +1,14 @@
-ARG BASE_IMAGE=ubuntu:22.10
+ARG BASE_IMAGE=ubuntu:22.04
 FROM --platform=linux/x86_64 $BASE_IMAGE
 
 # This file installs node.js, and a load of packages, on a base Ubuntu image.
 
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
 
-ENV NODE_VERSION 16.20.2
+ENV NODE_VERSION 20.15.1
 ENV NVM_VERSION=0.39.3
 RUN apt-get update \
+	# install general utilities used during node-related processes
 	&& apt-get install --no-install-recommends -y \
 		ca-certificates \
 		curl \
@@ -18,13 +19,18 @@ RUN apt-get update \
 		netcat-traditional \
 		wget \
 	&& apt-get clean \
-    && export NVM_DIR=/usr/local \
-    && (curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash) \
-    && source $NVM_DIR/nvm.sh && nvm install ${NODE_VERSION} \
-    && nvm use v${NODE_VERSION} \
-    && nvm alias default v${NODE_VERSION} \
-    && rm -rf $NVM_DIR/.cache \
-    && ln -s $NVM_DIR/versions/node/v${NODE_VERSION}/bin/node /usr/local/bin/node
+	# Install node via nvm
+	&& export NVM_DIR=/usr/local \
+	&& (curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash) \
+	&& source $NVM_DIR/nvm.sh && nvm install ${NODE_VERSION} \
+	&& nvm use v${NODE_VERSION} \
+	&& nvm alias default v${NODE_VERSION} \
+	&& rm -rf $NVM_DIR/.cache \
+	# Alias all executables. We only directly use 'node' but 'npm' can be accessed by modules.
+	&& ln -s $NVM_DIR/versions/node/v${NODE_VERSION}/bin/node /usr/local/bin/node \
+	&& ln -s $NVM_DIR/versions/node/v${NODE_VERSION}/bin/npm /usr/local/bin/npm \
+	&& ln -s $NVM_DIR/versions/node/v${NODE_VERSION}/bin/npx /usr/local/bin/npx \
+	&& ln -s $NVM_DIR/versions/node/v${NODE_VERSION}/bin/corepack /usr/local/bin/corepack
 
 # Install yarn
 ENV YARN_VERSION 1.22.19
@@ -36,6 +42,6 @@ RUN curl -L -o yarn.tar.gz "https://yarnpkg.com/downloads/${YARN_VERSION}/yarn-v
 
 # Preinstall packages whose binaries need to be accessible from the terminal
 RUN yarn global add \
-	db-migrate@^0.11.13 \
-	db-migrate-mysql@^2.2.0 \
-	newman@^5.3.2
+	db-migrate@^0.11.14 \
+	db-migrate-mysql@^3.0.0 \
+	newman@^6.1.3

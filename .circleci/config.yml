@@ -70,7 +70,7 @@ workflows:
 jobs:
 
   build-r-base:
-    executor: trove-docker
+    executor: trove-machine
     steps:
       - push-docker-image:
           image: r-base
@@ -80,7 +80,7 @@ jobs:
       - test-docker-image:
           image: r-base
   build-r-dojo:
-    executor: trove-docker
+    executor: trove-machine
     steps:
       - push-docker-image:
           image: r-dojo
@@ -91,7 +91,7 @@ jobs:
           image: r-dojo
 
   build-r-lambda:
-    executor: trove-docker
+    executor: trove-machine
     steps:
       - push-docker-image:
           image: r-lambda
@@ -102,7 +102,7 @@ jobs:
           image: r-lambda
 
   build-node-base:
-    executor: trove-docker
+    executor: trove-machine
     steps:
       - push-docker-image:
           image: node-base
@@ -112,7 +112,7 @@ jobs:
       - test-docker-image:
           image: node-base
   build-node-dojo:
-    executor: trove-docker
+    executor: trove-machine
     steps:
       - push-docker-image:
           image: node-dojo
@@ -123,7 +123,7 @@ jobs:
           image: node-dojo
 
   build-composite:
-    executor: trove-docker
+    executor: trove-machine
     steps:
       - push-docker-image:
           image: composite
@@ -134,7 +134,7 @@ jobs:
           image: composite
 
   build-tex-dojo:
-    executor: trove-docker
+    executor: trove-machine
     steps:
       - push-docker-image:
           image: tex-dojo
@@ -176,8 +176,6 @@ commands:
         type: string
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 20.10.18
       - run:
           command: make push-docker-<< parameters.image >>
 
@@ -197,7 +195,7 @@ commands:
       - run:
           name: Install dojo
           command: |
-            version="0.11.0"
+            version="0.13.0"
             wget -O /tmp/dojo https://github.com/kudulab/dojo/releases/download/${version}/dojo_linux_amd64
             chmod +x /tmp/dojo
             sudo mv /tmp/dojo /usr/bin/dojo

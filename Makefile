@@ -1,4 +1,4 @@
-SHELL=/bin/bash
+SHELL=/bin/bash -o pipefail
 REPO_USERNAME=trovediary
 IMAGE_TAG=$(shell git rev-parse HEAD)
 IMAGE_NAME=${REPO_USERNAME}/$*:${IMAGE_TAG}
@@ -94,7 +94,7 @@ build-docker-% docker-build-%: Dockerfile-%
 	echo ${IMAGE_NAME} >docker-$*.image.txt
 
 build-docker-composite docker-build-composite:
-	docker build -f Dockerfile-trove-r-base -t $(REPO_USERNAME)/trove-composite:r-base-$(IMAGE_TAG) .
+	docker build -f Dockerfile-trove-r-base -t $(REPO_USERNAME)/trove-composite:r-base-$(IMAGE_TAG) . 2>&1 | tee docker-r-base.log
 	docker build -f Dockerfile-trove-node-base -t $(REPO_USERNAME)/trove-composite:node-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:r-base-$(IMAGE_TAG) .
 	docker build -f Dockerfile-composite-misc -t $(REPO_USERNAME)/trove-composite:misc-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:node-$(IMAGE_TAG) .
 	docker build -f Dockerfile-trove-r-dojo -t $(REPO_USERNAME)/trove-composite:pre-dojo-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:misc-$(IMAGE_TAG) .
@@ -103,6 +103,15 @@ build-docker-composite docker-build-composite:
 	docker build -f Dockerfile-composite-circleci -t $(REPO_USERNAME)/trove-composite:pre-circleci-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:misc-$(IMAGE_TAG) .
 	docker build -f Dockerfile-composite-final -t $(REPO_USERNAME)/trove-composite:circleci-$(IMAGE_TAG) --build-arg USERNAME=circleci --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:pre-circleci-$(IMAGE_TAG) .
 	echo "$(REPO_USERNAME)/trove-composite:circleci-$(IMAGE_TAG)" >docker-composite.circleci.image.txt
+	@echo "Images built. You may need to update your terraform lockfile: see the README for details."
+
+terraform-update-lockfile:
+	docker run --rm -v $$(pwd):/home/circleci/project \
+	$$(cat docker-composite.circleci.image.txt) \
+	bash -c "cd docker-composite && \
+		terraform providers lock \
+			-enable-plugin-cache \
+			-platform=linux_amd64 -platform=darwin_arm64 -platform=linux_arm64"
 
 enter-composite-dojo:
 	dojo -image trovediary/trove-composite:dojo-$(IMAGE_TAG) bash
@@ -165,6 +174,9 @@ need-env-%:
 		echo "Missing environment variable: $*" >&2; \
 		exit 1; \
 	fi
+
+print-%:
+	@echo "$($*)"
 
 clean:
 	git clean -xdf
