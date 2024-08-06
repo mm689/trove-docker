@@ -1,4 +1,4 @@
-SHELL=/bin/bash
+SHELL=/bin/bash -o pipefail
 REPO_USERNAME=trovediary
 IMAGE_TAG=$(shell git rev-parse HEAD)
 IMAGE_NAME=${REPO_USERNAME}/$*:${IMAGE_TAG}
@@ -94,7 +94,7 @@ build-docker-% docker-build-%: Dockerfile-%
 	echo ${IMAGE_NAME} >docker-$*.image.txt
 
 build-docker-composite docker-build-composite:
-	docker build -f Dockerfile-trove-r-base -t $(REPO_USERNAME)/trove-composite:r-base-$(IMAGE_TAG) .
+	docker build -f Dockerfile-trove-r-base -t $(REPO_USERNAME)/trove-composite:r-base-$(IMAGE_TAG) . 2>&1 | tee docker-r-base.log
 	docker build -f Dockerfile-trove-node-base -t $(REPO_USERNAME)/trove-composite:node-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:r-base-$(IMAGE_TAG) .
 	docker build -f Dockerfile-composite-misc -t $(REPO_USERNAME)/trove-composite:misc-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:node-$(IMAGE_TAG) .
 	docker build -f Dockerfile-trove-r-dojo -t $(REPO_USERNAME)/trove-composite:pre-dojo-$(IMAGE_TAG) --build-arg BASE_IMAGE=$(REPO_USERNAME)/trove-composite:misc-$(IMAGE_TAG) .
