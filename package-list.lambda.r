@@ -12,5 +12,8 @@ list.of.packages <- c(
     "RMariaDB",  # database access
     "stringr",   # various text-processing helpers
     "svglite",   # returning graphs as SVG
+    "tibble",    # for words processing
+    "tidytext",  # stopwords for word wordclouds
+    "dplyr",     # arrange, rename, etc.
     "wordcloud"  # wordcloud generation
 )
