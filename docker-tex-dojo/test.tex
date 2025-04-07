@@ -1,14 +1,31 @@
 \documentclass[12pt]{article}
-	\usepackage[margin=1.5cm,top=1.5cm,bottom=0.9in]{geometry}
-	% Note: XeLaTeX requires package lmodern or it'll give font errors.
-	\usepackage{fontspec}
-	\title{Sample LaTeX document}
-	\begin{document}
+
+\usepackage[margin=1.5cm,top=1.5cm,bottom=0.9in]{geometry}
+% Note: XeLaTeX requires package lmodern or it'll give font errors.
+\usepackage{fontspec}
+\usepackage{svg}
+\usepackage{shellesc}
+\title{Sample LaTeX document}
+
+\begin{document}
+
 \section*{Sample \LaTeX{} section}
 \vspace{-1em}
 
 \textit{Subtitle in italics}
 
 Some téxt hęre.
+
+\ifcase\ShellEscapeStatus
+  No shell escape\or
+  Shell-escape: unrestricted\or
+  Shell escape: restricted%
+\fi
+
+\begin{figure}[htbp]
+  \centering
+  \includesvg[width=15mm]{svg-logo.svg}
+  \caption{Sample SVG image}
+\end{figure}
 
 \end{document}

@@ -1,5 +1,5 @@
-FROM --platform=linux/x86_64 ubuntu:jammy
-ENV DEBIAN_FRONTEND noninteractive
+FROM --platform=linux/x86_64 ubuntu:noble
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Based on https://github.com/blang/latex-docker/blob/master/Dockerfile.ubuntu
 RUN apt-get update -q && apt-get install -qy \
@@ -10,12 +10,12 @@ RUN apt-get update -q && apt-get install -qy \
     texlive-full \
     && rm -rf /var/lib/apt/lists/*
 
-ENV TINI_VERSION v0.19.0
+ENV TINI_VERSION=v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 
 # Install packages and Dojo scripts
-ENV DOJO_VERSION=0.13.0
+ENV DOJO_VERSION=0.13.3
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -25,9 +25,14 @@ RUN apt-get update \
     poppler-utils \
     sudo \
   && apt-get clean \
+  && sudo deluser ubuntu \
   && git clone --depth 1 -b ${DOJO_VERSION} https://github.com/kudulab/dojo.git /tmp/dojo_git \
   && /tmp/dojo_git/image_scripts/src/install.sh \
   && rm -r /tmp/dojo_git
+
+RUN apt-get update \
+  && apt-get install -y inkscape \
+  && apt-get clean
 
 COPY docker-tex-dojo/wordcount /usr/bin/
 

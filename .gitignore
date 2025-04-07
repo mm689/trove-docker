@@ -4,9 +4,10 @@ diary/
 trove/
 repo/
 
-docker-tex-dojo/*.*
+docker-tex-dojo/*
 !docker-tex-dojo/*.sh
 !docker-tex-dojo/*.tex
+!docker-tex-dojo/*.svg
 .terraform
 *.log
 test-output.*
