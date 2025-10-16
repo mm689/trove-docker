@@ -21,11 +21,6 @@ cd ~-
 new_packages=$(grep --fixed "c(" package-list.extra.r \
   | sed -E "s/.*c[(](.*)[)]/\1/" || true)
 
-if [ -n "$new_packages" ] && ! diff package-list.r package-list.trove-docker.r >/dev/null; then
-    echo "Error: packages modified in both trove:package-list.r and trove:package-list.extra.r" >&2
-    exit 1
-fi
-
 # If there are new packages in package-list.extra.r, move them over to package-list.r
 if [ -n "$new_packages" ]; then
 
@@ -72,7 +67,7 @@ extensions=$(echo $extensions | rev | sed 's/^,//;s/,/ dna /;s/,/ ,/g' | rev)
 plural=$(git diff --cached --name-only | tail -n +2)
 plural=$(echo "$plural" | grep . >/dev/null && echo "s" || echo "")
 # Commit.
-git commit -m "[Automatic] Updated $extensions package list$plural"
+git commit -m "[Automatic] Update $extensions package list$plural"
 
 if [[ "$1" == "--ci" ]]; then
     if [[ -n "$GIT_IDENTITY_TROVE_DOCKER" ]]; then

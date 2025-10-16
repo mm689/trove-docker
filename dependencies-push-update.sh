@@ -40,7 +40,7 @@ rm package-list.orig.r package-list.extra.orig.r package-list.new.r
 
 # Make the commit
 git add .
-git commit -m "[Automatic] Upgrading versions of docker images"
+git commit -m "[Automatic] Upgrade versions of docker images"
 
 if [[ "$1" == "--ci" ]]; then
     git push origin
