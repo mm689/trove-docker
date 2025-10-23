@@ -62,6 +62,7 @@ RUN echo "Installing packages required for specific R packages" \
 && rm /tmp/mysql-repo.rpm \
 && yum install -y \
     fontconfig-devel \
+    freetype-devel libpng-devel libtiff-devel libjpeg-devel libwebp-devel \
     mysql-devel \
     # package RMariaDB
     mariadb-devel \
@@ -70,6 +71,10 @@ RUN echo "Installing packages required for specific R packages" \
     && yum install -y openssl11-devel \
 && yum clean all \
 && rm -rf /var/cache/yum
+
+# NOTE: if packages fail to install due to missing system libraries, they often don't output nice
+# error messages in this script. If the same packages complain in Dockerfile-trove-r-base, consider
+# adding *here* the yum libraries specified in *that* error message.
 
 WORKDIR /lambda/
 

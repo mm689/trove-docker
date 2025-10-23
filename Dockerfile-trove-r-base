@@ -28,7 +28,7 @@ RUN wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc |
 		# package systemfonts
 		fontconfig \
 		# packages ragg, systemfonts
-		libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libwebp-dev \
+		libfreetype6-dev libpng-dev libjpeg-dev \
 		libcurl4-openssl-dev \
 		libfontconfig1-dev \
 		# package textshaping (for tidyverse)
