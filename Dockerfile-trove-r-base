@@ -64,10 +64,12 @@ COPY package-*.r /usr/src/
 RUN cd /usr/src \
 	&& chmod +x package-install.r \
 	&& ./package-install.r 2>&1 \
-	| grep -B 30 -A 20 -E "Status:|also installing|Error|ERROR|DONE"
+    # Ignore errors here; the next step will then only "install" any problematic/broken packages.
+    || true
+
+# Separate layer to reproduce just the errors that occurred in the previous step but were ignored.
+RUN cd /usr/src && ./package-install.r 2>&1
 
 ENV TZ=UTC
-
-COPY docker-r-dojo/tests/test.r docker-r-dojo/tests/test.r
 
 USER root

@@ -1,4 +1,4 @@
-FROM amazon/aws-lambda-provided:al2.2025.10.22.12-x86_64
+FROM amazon/aws-lambda-provided:al2.2025.10.22.12-x86_64 AS build
 
 # Based on https://cran.r-project.org/doc/manuals/R-admin.html#Installation
 
@@ -6,76 +6,142 @@ FROM amazon/aws-lambda-provided:al2.2025.10.22.12-x86_64
 
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
 
-RUN echo "Installing general project requirements..." \
-&& yum install -y \
-    git \
-	tar \
-	wget
+ENV R_VERSION=4.5.1 \
+    LANG=en_GB.UTF-8 \
+    LC_ALL=en_GB.UTF-8 \
+    LC_MESSAGES=en_GB.UTF-8
+# NOTE if R fails to find en_GB.UTF-8, add the glibc-langpack-en package below
 
-ENV R_VERSION=4.5.1
 RUN echo "Downloading R installation package..." \
-&& wget https://cran.r-project.org/src/base/R-4/R-${R_VERSION}.tar.gz -O /tmp/R.tar.gz \
-\
-&& echo "Installing packages required to compile R..." \
-&& yum install -y \
-    bzip2-devel \
-    # C and C++ compilation
-    clang \
-    curl-devel \
-    # packages ragg, systemfonts
-    libfreetype6-dev \
-    # Fortran compilation
-    gcc-gfortran \
-    # libjpeg and libXmu are needed for generated JPEGs
-    # libX11, libXt and pango are needed for generating PNGs
-    libjpeg-turbo-devel \
-    libX11-devel \
-    libXt-devel \
-    make \
-    pango-devel \
-    pcre2-devel \
-    readline-devel \
-    which \
-    xz-devel \
-    zlib-devel \
-\
-&& echo "Installing R..." \
-&& tar -xvf /tmp/R.tar.gz -C /usr/local/ \
-&& (cd /usr/local/R-${R_VERSION} && ./configure && make) \
-&& ln -s /usr/local/R-${R_VERSION}/bin/R /usr/local/bin/R \
-&& ln -s /usr/local/R-${R_VERSION}/bin/Rscript /usr/local/bin/Rscript \
-\
-&& echo "Validating R installation..." \
-&& R --version \
-&& (cd /usr/local/R-${R_VERSION} && make check) \
-\
-&& echo "Tidying up..." \
-&& rm -rf /tmp/R.tar.gz \
-&& yum clean all \
-&& rm -rf /var/cache/yum
+    && yum install -y wget \
+    && wget https://cran.r-project.org/src/base/R-4/R-${R_VERSION}.tar.gz -O /tmp/R.tar.gz
 
-# NB MySQL yum repo added per instructions at:
-#  https://github.com/r-dbi/RMariaDB?tab=readme-ov-file#mysql-client-library
-RUN echo "Installing packages required for specific R packages" \
-&& wget https://dev.mysql.com/get/mysql84-community-release-el$(rpm -E %{rhel})-1.noarch.rpm -O /tmp/mysql-repo.rpm \
-&& yum localinstall -y /tmp/mysql-repo.rpm \
-&& rm /tmp/mysql-repo.rpm \
-&& yum install -y \
-    fontconfig-devel \
-    mysql-devel \
-    # package RMariaDB
-    mariadb-devel \
-    # package httr
+RUN echo "Installing packages required to build R..." \
+    && yum install -y \
+        bzip2-devel \
+        # C and C++ compilation
+        clang \
+        curl-devel \
+        # Fortran compilation
+        gcc-gfortran \
+        git \
+        # image support is built into R, before even thinking of package installation
+        libjpeg-devel \
+        libX11-devel \
+        libXt-devel \
+        make \
+        pango-devel \
+        pcre2-devel \
+        readline-devel \
+        tar \
+        which \
+        xz-devel \
+        zlib-devel
+
+RUN echo "Installing R..." \
+    && tar -xvf /tmp/R.tar.gz -C /usr/local/ \
+    && mv /usr/local/R-${R_VERSION} /usr/local/R-pinned \
+    && (cd /usr/local/R-pinned \
+        && CC=clang CXX=clang++ ./configure --enable-R-shlib \
+        && make -j"$(nproc)") \
+    && ln -s /usr/local/R-pinned/bin/R /usr/local/bin/R \
+    && ln -s /usr/local/R-pinned/bin/Rscript /usr/local/bin/Rscript
+
+RUN echo "Validating R installation..." \
+    && R --version \
+    && ls /usr/local/R-pinned/lib/libR.so \
+    && (cd /usr/local/R-pinned && make check)
+
+# MariaDB needs to be installed *before* openssl11-devel is installed, as it requires openssl 1.0 not 1.1
+# RUN echo "Installing MariaDB separately due to dependencies on conflicting OpenSSL versions" \
+RUN echo "Installing MariaDB with its dependency package..." \
+    && yum install -y mariadb-devel \
+    && Rscript -e 'install.packages("RMariaDB", repos="https://cloud.r-project.org")' \
+    && yum remove -y mariadb-devel \
+    && Rscript -e 'library(RMariaDB)'
+
+ENV FREETYPE_VERSION=2.13.1 \
+    WEBP_VERSION=1.6.0
+ENV CUSTOM_LIBS=" \
+    https://download.savannah.gnu.org/releases/freetype/freetype-${FREETYPE_VERSION}.tar.gz \
+    https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-${WEBP_VERSION}.tar.gz"
+
+RUN echo "Compiling some dependencies from source..." \
+    && set -x \
+    && for file in $CUSTOM_LIBS; do \
+        cd $(tempfile -d) \
+        && wget $file -O ./library.tar.gz \
+        && tar -xzf ./library.tar.gz -C . \
+        && rm ./library.tar.gz \
+        && cd $(ls | head -1) \
+        && ./configure --prefix=/usr \
+        && make -j"$(nproc)" \
+        && make install || (exit 1); \
+    done
+
+RUN echo "Installing packages required for specific R packages..." \
     && yum remove -y openssl-devel \
-    && yum install -y openssl11-devel \
-&& yum clean all \
-&& rm -rf /var/cache/yum
+    && yum install -y openssl11-devel
+
+# NOTE: if packages fail to install due to missing system libraries, they often don't output nice
+# error messages in this script. If the same packages complain in Dockerfile-trove-r-base, consider
+# adding *here* the yum libraries specified in *that* error message.
 
 WORKDIR /lambda/
-
 COPY ./package-list.lambda.r ./package-install.r /lambda/
-RUN	mv package-list.lambda.r package-list.r \
+RUN	echo "Installing all R packages..." \
+    && mv package-list.lambda.r package-list.r \
     && Rscript ./package-install.r 2>&1 \
-    | grep -B 30 -A 20 -E "Status:|also installing|Error|ERROR|DONE"
+    # Ignore errors here; the next step will then only "install" any problematic/broken packages, which makes logs more concise.
+    || true
 
-ENV TZ=UTC
+RUN echo "Reproducing error messages for any failed R packages..." \
+    && Rscript ./package-install.r
+
+
+FROM amazon/aws-lambda-provided:al2.2025.10.22.12-x86_64
+
+# Install core library files via packages
+RUN yum install -y \
+    # much of R needs fortran
+    libgfortran \
+    # needed for image generation
+    libtiff \
+    libXt \
+    # for RMariaDB
+    mariadb-libs \
+    # for svg support
+    pango \
+    # perl compatible regexes are needed by R in general
+    pcre2 \
+    # for internal package loading
+    which \
+    && yum clean all \
+    && rm -rf /var/cache/yum
+
+# Alternatively, copy over core library files.
+# (use `yum whatprovides */libicuuc.so` to see what packages could replace this.)
+COPY --from=build /usr/lib64/libicu*.so.* /usr/lib64/
+COPY --from=build /usr/local/R-pinned/modules/R_X11.so /usr/local/R-pinned/modules/R_X11.so
+
+# Copy minimal but complete R installation
+COPY --from=build /usr/local/R-pinned/bin /usr/local/R-pinned/bin
+COPY --from=build /usr/local/R-pinned/lib /usr/local/R-pinned/lib
+COPY --from=build /usr/local/R-pinned/library /usr/local/R-pinned/library
+COPY --from=build /usr/local/R-pinned/etc /usr/local/R-pinned/etc
+
+# Copy R binaries to a standard path so scripts with #!/usr/bin/env Rscript work
+RUN ln -s /usr/local/R-pinned/bin/Rscript /usr/bin/Rscript
+
+WORKDIR /lambda/
+COPY ./package-list.lambda.r /lambda/
+RUN mv package-list.lambda.r package-list.r
+
+ENV TZ=UTC \
+    LANG=en_GB.UTF-8 \
+    LC_ALL=en_GB.UTF-8 \
+    LC_MESSAGES=en_GB.UTF-8
+
+# COPY ./docker-r-dojo/tests/* ./package-list.lambda.r ./package-install.r /lambda/
+# RUN chmod +x /lambda/test.sh && /lambda/test.sh
+# RUN echo "Success" && false

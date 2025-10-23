@@ -29,14 +29,11 @@ push-docker-tex-dojo docker-push-tex-dojo:
 
 # IMAGE-SPECIFIC RULES
 
-test-docker-r-base test-docker-trove-r-base: docker-trove-r-base.image.txt
-	dojo -image $(shell cat $<) --docker-options "-w /dojo/work" docker-r-dojo/tests/test.r
-
 test-docker-r-dojo test-docker-trove-r-dojo: docker-trove-r-dojo.image.txt
-	dojo -image $(shell cat $<) docker-r-dojo/tests/test.r
+	dojo -image $(shell cat $<) docker-r-dojo/tests/test.sh
 
-test-docker-r-lambda test-docker-trove-r-lambda: docker-trove-r-lambda.image.txt
-	dojo -image $(shell cat $<) --docker-options "-w /dojo/work --entrypoint Rscript" docker-r-dojo/tests/test.r
+test-docker-r-% test-docker-trove-r-%: docker-trove-r-%.image.txt
+	dojo -image $(shell cat $<) --docker-options "-w /dojo/work --entrypoint bash" docker-r-dojo/tests/test.sh
 
 test-docker-node-base test-docker-trove-node-base: docker-trove-node-base.image.txt
 	dojo -image $(shell cat $<) --docker-options "-w /dojo/work/docker-node-dojo" make test
