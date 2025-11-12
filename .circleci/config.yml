@@ -62,7 +62,7 @@ workflows:
             - test-tex-dojo
           filters:
             branches:
-              only: master
+              only: main
 
 
 ##########
