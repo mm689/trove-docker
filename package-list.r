@@ -9,4 +9,4 @@ list.of.packages <- c('jsonlite', 'methods', 'ggplot2', 'gtools', 'stringr',
   'NLP', 'RColorBrewer', 'tm', 'wordcloud', 'stringdist', 'plotrix',
   'tidytext', 'tidyverse', 'ggpubr', 'data.table', 'testthat', 'mockery',
   'plumber', 'httr', 'svglite', 'doParallel', 'foreach', 'stringi', 'hms',
-  'RMariaDB', 'DBI', 'aws.signature', 'styler', 'lintr')
+  'RMariaDB', 'DBI', 'aws.signature', 'styler', 'lintr', 'pkgload')
