@@ -1,20 +1,22 @@
 ARG BASE_IMAGE
-FROM --platform=linux/x86_64 $BASE_IMAGE
+FROM --platform=linux/amd64 $BASE_IMAGE
 ARG USERNAME='dojo'
+
+ENV PLATFORM=linux_amd64
 
 # Final-stage prep that works differently depending on if we're building dojo or CircleCI image
 
 # Preinstall terraform plugins
 ENV TF_PLUGIN_CACHE_DIR="/home/${USERNAME}/.terraform.d/plugins-cache"
-RUN export PACKAGES="aws=5.62.0 local=2.5.1 external=2.3.3 time=0.12.0" \
+RUN export PACKAGES="aws=6.25.0 local=2.6.1 external=2.3.5 time=0.13.1" \
   && for packageversion in $PACKAGES; do \
     PACKAGE=${packageversion%%=*}; \
     VERSION=${packageversion#*=}; \
     echo "Installing package ${PACKAGE} at version ${VERSION}..." && \
-    wget --no-verbose https://releases.hashicorp.com/terraform-provider-${PACKAGE}/${VERSION}/terraform-provider-${PACKAGE}_${VERSION}_linux_amd64.zip && \
-    unzip terraform-provider-${PACKAGE}_${VERSION}_linux_amd64.zip -d terraform-provider-${PACKAGE} && \
-    rm terraform-provider-${PACKAGE}_${VERSION}_linux_amd64.zip && \
-    mkdir -p $TF_PLUGIN_CACHE_DIR/registry.terraform.io/hashicorp/${PACKAGE}/${VERSION}/linux_amd64 && \
-    mv terraform-provider-${PACKAGE}/terraform-provider* $TF_PLUGIN_CACHE_DIR/registry.terraform.io/hashicorp/${PACKAGE}/${VERSION}/linux_amd64; \
+    wget --no-verbose https://releases.hashicorp.com/terraform-provider-${PACKAGE}/${VERSION}/terraform-provider-${PACKAGE}_${VERSION}_${PLATFORM}.zip && \
+    unzip terraform-provider-${PACKAGE}_${VERSION}_${PLATFORM}.zip -d terraform-provider-${PACKAGE} && \
+    rm terraform-provider-${PACKAGE}_${VERSION}_${PLATFORM}.zip && \
+    mkdir -p $TF_PLUGIN_CACHE_DIR/registry.terraform.io/hashicorp/${PACKAGE}/${VERSION}/${PLATFORM} && \
+    mv terraform-provider-${PACKAGE}/terraform-provider* $TF_PLUGIN_CACHE_DIR/registry.terraform.io/hashicorp/${PACKAGE}/${VERSION}/${PLATFORM}; \
   done \
   && chown -R $USERNAME:$USERNAME $TF_PLUGIN_CACHE_DIR

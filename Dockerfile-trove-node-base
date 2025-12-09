@@ -5,8 +5,8 @@ FROM --platform=linux/x86_64 $BASE_IMAGE
 
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
 
-ENV NODE_VERSION 20.15.1
-ENV NVM_VERSION=0.39.3
+ENV NODE_VERSION 24.11.1
+ENV NVM_VERSION=0.40.3
 RUN apt-get update \
 	# install general utilities used during node-related processes
 	&& apt-get install --no-install-recommends -y \
@@ -33,7 +33,7 @@ RUN apt-get update \
 	&& ln -s $NVM_DIR/versions/node/v${NODE_VERSION}/bin/corepack /usr/local/bin/corepack
 
 # Install yarn
-ENV YARN_VERSION 1.22.19
+ENV YARN_VERSION 1.22.22
 RUN curl -L -o yarn.tar.gz "https://yarnpkg.com/downloads/${YARN_VERSION}/yarn-v${YARN_VERSION}.tar.gz" && \
 	tar -xzf yarn.tar.gz -C /opt/ && \
 	rm yarn.tar.gz && \
