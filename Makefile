@@ -44,11 +44,13 @@ test-docker-node-dojo test-docker-trove-node-dojo: docker-trove-node-dojo.image.
 test-docker-tex-dojo: docker-tex-dojo.image.txt
 	dojo -image $(shell cat $<) ./docker-tex-dojo/test.sh
 
-test-docker-composite: test-docker-composite-node test-docker-composite-r test-docker-composite-terraform
+test-docker-composite: test-docker-composite-node test-docker-composite-r test-docker-composite-playwright test-docker-composite-terraform
 test-docker-composite-node: docker-composite.dojo.image.txt
 	dojo -image $(shell cat $<) "cd docker-node-dojo && make test"
 test-docker-composite-r: docker-composite.dojo.image.txt
 	dojo -image $(shell cat $<) docker-r-dojo/tests/test.r
+test-docker-composite-playwright: docker-composite.dojo.image.txt
+	dojo -image $(shell cat $<) "cd docker-composite && yarn install --frozen-lockfile && ./test-playwright.mjs"
 test-docker-composite-terraform: test-docker-composite-terraform-dojo test-docker-composite-circleci
 
 test-docker-composite-terraform-dojo: docker-composite.dojo.image.txt
