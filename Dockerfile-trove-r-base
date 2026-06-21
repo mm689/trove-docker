@@ -16,7 +16,7 @@ RUN apt-get update \
 		wget \
     && apt-get clean
 
-ENV R_BASE_VERSION=4.5.
+ENV R_BASE_VERSION=4.6.
 RUN wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc \
     && add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" \
 	\
@@ -48,6 +48,8 @@ RUN wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc |
 		libssl-dev \
 		# package textshaping (for tidyverse)
 		libtiff5-dev \
+		# package fs (for tidyverse)
+		libuv1-dev \
 		libxml2-dev \
 		mysql-client \
 		make \

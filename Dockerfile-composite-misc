@@ -32,3 +32,11 @@ RUN apt-get update && \
 
 
 SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
+
+# Install Chromium browser for smoke tests (Playwright installed at test time).
+# Install playwright temporarily to download chromium, then uninstall to avoid duplication.
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
+RUN npm install -g playwright@1.50.0 \
+    && npx playwright install --with-deps chromium \
+    && npm uninstall -g playwright \
+    && chmod -R 755 /opt/ms-playwright

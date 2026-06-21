@@ -1,4 +1,4 @@
-FROM amazon/aws-lambda-provided:al2.2025.10.22.12-x86_64 AS build
+FROM amazon/aws-lambda-provided:al2.2026.05.05.20-x86_64 AS build
 
 # Based on https://cran.r-project.org/doc/manuals/R-admin.html#Installation
 
@@ -52,13 +52,14 @@ RUN echo "Validating R installation..." \
     && ls /usr/local/R-pinned/lib/libR.so \
     && (cd /usr/local/R-pinned && make check)
 
-# MariaDB needs to be installed *before* openssl11-devel is installed, as it requires openssl 1.0 not 1.1
-# RUN echo "Installing MariaDB separately due to dependencies on conflicting OpenSSL versions" \
-RUN echo "Installing MariaDB with its dependency package..." \
-    && yum install -y mariadb-devel \
+RUN echo "Installing MariaDB and OpenSSL dependencies for R packages..." \
+    && echo -e "[mariadb]\nname=MariaDB\nbaseurl=https://mirror.mariadb.org/yum/11.4/rhel/7/x86_64/\ngpgkey=https://mirror.mariadb.org/yum/RPM-GPG-KEY-MariaDB\ngpgcheck=1" > /etc/yum.repos.d/mariadb.repo \
+    && yum install -y MariaDB-devel \
     && Rscript -e 'install.packages("RMariaDB", repos="https://cloud.r-project.org")' \
-    && yum remove -y mariadb-devel \
-    && Rscript -e 'library(RMariaDB)'
+    && yum remove -y MariaDB-devel \
+    && Rscript -e 'library(RMariaDB)' \
+    # httr requires openssl R package, which needs openssl11-devel
+    && yum install -y openssl11-devel
 
 ENV FREETYPE_VERSION=2.13.1 \
     WEBP_VERSION=1.6.0
@@ -79,10 +80,6 @@ RUN echo "Compiling some dependencies from source..." \
         && make install || (exit 1); \
     done
 
-RUN echo "Installing packages required for specific R packages..." \
-    && yum remove -y openssl-devel \
-    && yum install -y openssl11-devel
-
 # NOTE: if packages fail to install due to missing system libraries, they often don't output nice
 # error messages in this script. If the same packages complain in Dockerfile-trove-r-base, consider
 # adding *here* the yum libraries specified in *that* error message.
@@ -99,23 +96,28 @@ RUN echo "Reproducing error messages for any failed R packages..." \
     && Rscript ./package-install.r
 
 
-FROM amazon/aws-lambda-provided:al2.2025.10.22.12-x86_64
+FROM amazon/aws-lambda-provided:al2.2026.05.05.20-x86_64
 
 # Install core library files via packages
-RUN yum install -y \
-    # much of R needs fortran
-    libgfortran \
-    # needed for image generation
-    libtiff \
-    libXt \
-    # for RMariaDB
-    mariadb-libs \
-    # for svg support
-    pango \
-    # perl compatible regexes are needed by R in general
-    pcre2 \
-    # for internal package loading
-    which \
+RUN echo -e "[mariadb]\nname=MariaDB\nbaseurl=https://mirror.mariadb.org/yum/11.4/rhel/7/x86_64/\ngpgkey=https://mirror.mariadb.org/yum/RPM-GPG-KEY-MariaDB\ngpgcheck=1" > /etc/yum.repos.d/mariadb.repo \
+    && yum install -y \
+        # much of R needs fortran
+        libgfortran \
+        # needed for image generation
+        libtiff \
+        libXt \
+        # for RMariaDB - use MariaDB 11.4 runtime libs to match build stage
+        MariaDB-shared \
+        # for R openssl package (used by httr)
+        openssl11-libs \
+        # for svg support
+        pango \
+        # provides fc-cache, used below to pre-build the font cache
+        fontconfig \
+        # perl compatible regexes are needed by R in general
+        pcre2 \
+        # for internal package loading
+        which \
     && yum clean all \
     && rm -rf /var/cache/yum
 
@@ -133,14 +135,23 @@ COPY --from=build /usr/local/R-pinned/etc /usr/local/R-pinned/etc
 # Copy R binaries to a standard path so scripts with #!/usr/bin/env Rscript work
 RUN ln -s /usr/local/R-pinned/bin/Rscript /usr/bin/Rscript
 
-WORKDIR /lambda/
-COPY ./package-list.lambda.r /lambda/
-RUN mv package-list.lambda.r package-list.r
-
 ENV TZ=UTC \
     LANG=en_GB.UTF-8 \
     LC_ALL=en_GB.UTF-8 \
     LC_MESSAGES=en_GB.UTF-8
+
+WORKDIR /lambda/
+COPY ./package-list.lambda.r /lambda/
+
+# Pre-build the font cache (the runtime filesystem is read-only) and validate
+# SVG rendering, so a broken graphics stack fails the build instead of the itests.
+RUN mv package-list.lambda.r package-list.r \
+    && fc-cache -f \
+    && Rscript \
+        -e 'suppressMessages({ library(ggplot2); library(svglite) })' \
+        -e 'f <- tempfile(fileext = ".svg")' \
+        -e 'ggsave(f, ggplot(data.frame(x = 1:3, y = 1:3), aes(x, y)) + geom_col(), device = "svg", width = 4, height = 3)' \
+        -e 'if (file.info(f)$size < 100) stop("SVG render produced no output")'
 
 # COPY ./docker-r-dojo/tests/* ./package-list.lambda.r ./package-install.r /lambda/
 # RUN chmod +x /lambda/test.sh && /lambda/test.sh
